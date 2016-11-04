@@ -153,7 +153,7 @@ namespace Infrastructure.Helper
                 else
                 {
                     //from local store
-                    var valueFromLocal = File.ReadAllText(_localStorePath).FromJsonToObject<Dictionary<String, String>>()[key];
+                    var valueFromLocal = File.ReadAllText(_localStorePath).JsonToObject<Dictionary<String, String>>()[key];
                     _deployQuerys.Add(key, valueFromLocal);
                     return valueFromLocal;
                 }

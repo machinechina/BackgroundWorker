@@ -11,10 +11,14 @@
     <AssemblyName>Infrastructure</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,13 +52,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
-    <Compile Include="Helper\JsonHelper.cs" />
+    <Compile Include="Helper\ConvertHelper.cs" />
     <Compile Include="Helper\ApplicationHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Threading\IntervalTask.cs" />
     <Compile Include="Worker\IWorker.cs" />
     <Compile Include="Worker\Worker.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Web\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

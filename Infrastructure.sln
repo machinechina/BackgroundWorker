@@ -31,19 +31,5 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 4
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = http://dev.istudy.sh.cn:8080/tfs/defaultcollection
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = Infrastructure\\Infrastructure.csproj
-		SccProjectName1 = Infrastructure
-		SccLocalPath1 = Infrastructure
-		SccProjectUniqueName2 = Infrastructure.Worker\\Infrastructure.QueueWorker.csproj
-		SccProjectName2 = Infrastructure.Worker
-		SccLocalPath2 = Infrastructure.Worker
-		SccProjectUniqueName3 = Infrastructure.UnitTest\\Infrastructure.UnitTest.csproj
-		SccProjectName3 = Infrastructure.UnitTest
-		SccLocalPath3 = Infrastructure.UnitTest
-	EndGlobalSection
+
 EndGlobal
