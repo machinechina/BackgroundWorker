@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -16,14 +17,23 @@ namespace Infrastructure.Helper
             return Json.Encode(obj);
         }
 
-        public static dynamic FromJsonToDynamic(this String json)
+        public static dynamic JsonToDynamic(this String json)
         {
             return Json.Decode(json);
         }
 
-        public static T FromJsonToObject<T>(this String json)
+        public static T JsonToObject<T>(this String json)
         {
             return Json.Decode<T>(json);
+        }
+    }
+
+    public static class CollectionConverter
+    {
+        public static IDictionary<string, string> ToDictionary(this NameValueCollection col)
+        {
+            return col.Keys.Cast<string>()
+                      .ToDictionary(k => k, v => col[v]);
         }
     }
 
