@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Infrastructure.Helper;
+using Infrastructure.Helpers;
 
 namespace Infrastructure.Threading
 {
@@ -55,7 +55,7 @@ namespace Infrastructure.Threading
                         }
                         catch (Exception ex)
                         {
-                            ApplicationHelper.Log(ex);
+                            Helper.Log(ex);
                         }
                     }
                 }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);

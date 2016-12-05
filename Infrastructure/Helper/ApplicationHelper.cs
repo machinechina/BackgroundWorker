@@ -7,11 +7,11 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Web;
-using System.Web.Helpers;
+using Infrastructure.Extensions;
 
-namespace Infrastructure.Helper
+namespace Infrastructure.Helpers
 {
-    public class ApplicationHelper
+    public partial class Helper
     {
         public static void CheckAdminRights()
         {
@@ -114,7 +114,7 @@ namespace Infrastructure.Helper
         }
 
         /// <summary>
-        /// 通过网络部署时可以在安装链接后传递querystring
+        /// 通过网络部署时可以在安装链接后传递querystring(需要在项目属性中开启)
         /// 如http://....../CDN.ConsoleApp.application?SyncApiParam=123123
         /// 这样可以实现一次部署,不同配置
         /// 但程序在本地再次打开时,将取不到这个参数,所以第一次安装后需要持久化
@@ -122,26 +122,50 @@ namespace Infrastructure.Helper
         /// 并在需要的时候用GetDeployQueryString获取
         /// </summary>
         /// <returns></returns>
-        private static Dictionary<String, String> _deployQuerys;
+        private static IDictionary<String, String> _deployQuerys;
 
         private static String _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys");
 
-        public static void InitDeployQueryString()
+        public static void InitDeployQueryString(params String[] requiredKeys)
         {
-            try
+            if (ApplicationDeployment.IsNetworkDeployed)//只有网络部署会用到Url Params
             {
-                var query = HttpUtility.ParseQueryString(ApplicationDeployment.CurrentDeployment.ActivationUri.Query);
-                _deployQuerys = query.Keys.Cast<string>()
-                    .ToDictionary(k => k, v => query[v]);
-                File.WriteAllText(_localStorePath, _deployQuerys.ToJson());
-            }
-            catch
-            {
-                _deployQuerys = new Dictionary<string, string>();
+                try
+                {
+                    //从url安装时获取到,之后的自动/手动升级都不会再访问到,Query是get访问器会直接抛异常
+                    _deployQuerys = HttpUtility.ParseQueryString(ApplicationDeployment.CurrentDeployment.ActivationUri.Query)
+                        .ToDictionary();
+
+                    File.WriteAllText(_localStorePath, _deployQuerys.ToJson());//一旦获取到url params就持久化
+                }
+                catch { _deployQuerys = new Dictionary<string, string>(); }
+
+                //必选参数,如果没找到则抛异常
+                foreach (var key in requiredKeys)
+                {
+                    GetDeployQueryString(key);
+                }
             }
         }
 
-        public static String GetDeployQueryString(String key)
+        public static T GetConfigFromDeployThenAppConfig<T>(String key)
+        {
+            if (!ApplicationDeployment.IsNetworkDeployed)
+            {
+                return GetAppConfig<T>(key);
+            }
+
+            try
+            {
+                return (T)Convert.ChangeType(GetDeployQueryString(key), typeof(T));
+            }
+            catch (KeyNotFoundException)
+            {
+                return GetAppConfig<T>(key);
+            }
+        }
+
+        private static String GetDeployQueryString(String key)
         {
             try
             {
@@ -158,11 +182,12 @@ namespace Infrastructure.Helper
                     return valueFromLocal;
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Log(ex, "No such query string from deploy");
-                return String.Empty;
+                throw new KeyNotFoundException($"Missing param from url [{key}]");
             }
         }
+
+
     }
 }
