@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using DiskQueue;
-using Infrastructure.Helper;
+using Infrastructure.Helpers;
 using Infrastructure.Workers;
 using static Infrastructure.Threading.IntervalTask;
 
@@ -58,7 +58,7 @@ namespace Infrastructure.QueueWorker
                     catch (Exception ex)
                     {
                         var msg = $"Error Dequeue: {dataString}\n";
-                        ApplicationHelper.Log(ex, msg);
+                        Helper.Log(ex, msg);
                     }
                     finally
                     {
