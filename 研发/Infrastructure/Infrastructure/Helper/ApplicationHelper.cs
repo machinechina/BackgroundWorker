@@ -13,6 +13,13 @@ namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
+        public static String AppName
+        {
+            get
+            {
+                return System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+            }
+        }
         public static void CheckAdminRights()
         {
             var wi = WindowsIdentity.GetCurrent();
@@ -124,7 +131,7 @@ namespace Infrastructure.Helpers
         /// <returns></returns>
         private static IDictionary<String, String> _deployQuerys;
 
-        private static String _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys");
+        private static String _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys_" + AppName);
 
         public static void InitDeployQueryString(params String[] requiredKeys)
         {
