@@ -22,6 +22,7 @@ namespace Infrastructure.QueueWorker
         private static Int16 _workersCountForEachQueue;
         private static Int32 _stopAfterContinuousIdleLoopCount;
         private static Boolean _initialized = false;
+
         /// <summary>
         /// 初始化
         /// </summary>
@@ -36,21 +37,17 @@ namespace Infrastructure.QueueWorker
             Directory.CreateDirectory(queueRootFolder);
             _queueRootFolder = queueRootFolder;
 
-            if (dequeueAction == null)
-                throw new Exception("必须指定操作");
-            _action = dequeueAction;
+            _action = dequeueAction
+                ?? throw new Exception("必须指定操作");
 
-            if (waitInterval < 0)
-                throw new Exception("等待周期必须>=0");
-            _waitInterval = waitInterval;
+            _waitInterval = waitInterval >= 0 ? waitInterval
+                : throw new Exception("等待周期必须>=0");
 
-            if (stopAfterContinuousIdleLoopCount < 0)
-                throw new Exception("空转周期必须>=0");
-            _stopAfterContinuousIdleLoopCount = stopAfterContinuousIdleLoopCount;
+            _stopAfterContinuousIdleLoopCount = stopAfterContinuousIdleLoopCount >= 0 ? stopAfterContinuousIdleLoopCount
+                : throw new Exception("空转周期必须>=0");
 
-            if (workersCountForEachQueue < 0)
-                throw new Exception("Worker数必须>=0");
-            _workersCountForEachQueue = workersCountForEachQueue;
+            _workersCountForEachQueue = workersCountForEachQueue >= 0 ? workersCountForEachQueue
+                : throw new Exception("Worker数必须>=0");
 
             //找到所有的队列,每一个启动一个Worker处理
             //尽量不要使用,而是在入列的时候LazyLoad
