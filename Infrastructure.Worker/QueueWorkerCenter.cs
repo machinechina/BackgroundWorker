@@ -12,16 +12,16 @@ namespace Infrastructure.QueueWorker
     /// 维护Worker实例,保证启动或队列创建时,有一个Worker负责Dequeue
     /// 同时创建和维护队列实例,同一名称的队列应该只被创建一次,并且始终存活
     /// </summary>
-    public static class QueueWorkerCenter
+    public static class QueueWorkerBus
     {
-        private static Action<String> _action;
-        private static ConcurrentDictionary<String, IPersistentQueue> _queues = new ConcurrentDictionary<string, IPersistentQueue>();
-        private static ConcurrentBag<DeQueueWorker> _workers = new ConcurrentBag<DeQueueWorker>();
-        private static String _queueRootFolder = "";
-        private static Int32 _waitInterval;
-        private static Int16 _workersCountForEachQueue;
-        private static Int32 _stopAfterContinuousIdleLoopCount;
-        private static Boolean _initialized = false;
+        private static Action<string> _action;
+        private static ConcurrentDictionary<string, IPersistentQueue> _queues = new ConcurrentDictionary<string, IPersistentQueue>();
+        private static ConcurrentBag<QueueWorker> _workers = new ConcurrentBag<QueueWorker>();
+        private static string _queueRootFolder = "";
+        private static int _waitInterval;
+        private static short _workersCountForEachQueue;
+        private static int _stopAfterContinuousIdleLoopCount;
+        private static bool _initialized = false;
 
         /// <summary>
         /// 初始化
@@ -32,7 +32,12 @@ namespace Infrastructure.QueueWorker
         /// <param name="stopAfterContinuousIdleLoopCount">空闲时关闭Worker所需的连续自旋次数,0为不关闭,建议设置以减少开销</param>
         /// <param name="workersCountForEachQueue">每个队列的Worker数</param>
         /// <param name="startWorkImmediately">是否寻找现有队列,并启动相关的所有Workers</param>
-        public static void Initialize(String queueRootFolder, Action<String> dequeueAction, Int32 waitInterval, Int32 stopAfterContinuousIdleLoopCount = 0, Int16 workersCountForEachQueue = 1, Boolean startWorkImmediately = false)
+        public static void Initialize(string queueRootFolder, 
+            Action<string> dequeueAction,
+            int waitInterval,
+            int stopAfterContinuousIdleLoopCount = 0,
+            short workersCountForEachQueue = 1,
+            bool startWorkImmediately = false)
         {
             Directory.CreateDirectory(queueRootFolder);
             _queueRootFolder = queueRootFolder;
@@ -74,13 +79,18 @@ namespace Infrastructure.QueueWorker
         {
             Parallel.ForEach(_workers, w => w.Stop());
         }
+        public static void Halt()
+        {
+            StopAll();
+            Parallel.ForEach(_queues, q => q.Value?.Dispose());
+        }
 
         /// <summary>
         /// 将一个对象放入指定的队列
         /// </summary>
         /// <param name="queueName">队列名称</param>
         /// <param name="data">(序列化的)对象</param>
-        public static void Enqueue(String queueName, String data)
+        public static void Enqueue(string queueName, string data)
         {
             if (!_initialized)
                 throw new Exception("初始化尚未完成");
@@ -95,7 +105,7 @@ namespace Infrastructure.QueueWorker
             StartWorkerForQueue(queueName);
         }
 
-        internal static void StartWorkerForQueue(String queueName)
+        internal static void StartWorkerForQueue(string queueName)
         {
             //仅在队列有任务的时候才会开启Workers
             var queue = _queues[queueName];
@@ -105,7 +115,7 @@ namespace Infrastructure.QueueWorker
             }
         }
 
-        internal static IPersistentQueue GetOrCreateQueueWithWorkers(String name)
+        internal static IPersistentQueue GetOrCreateQueueWithWorkers(string name)
         {
             IPersistentQueue queue;
             if (_queues.TryGetValue(name, out queue))
@@ -122,7 +132,7 @@ namespace Infrastructure.QueueWorker
                          queue = new PersistentQueue(queuePath);
                          Parallel.For(0, _workersCountForEachQueue, i =>
                          {
-                             var worker = new DeQueueWorker(queue, name, _action, _waitInterval, _stopAfterContinuousIdleLoopCount);
+                             var worker = new QueueWorker(queue, name, _action, _waitInterval, _stopAfterContinuousIdleLoopCount);
                              _workers.Add(worker);
                          });
 
@@ -131,9 +141,10 @@ namespace Infrastructure.QueueWorker
             }
         }
 
-        internal static IPersistentQueue GetOrCreateQueue(String name)
+        internal static IPersistentQueue GetOrCreateQueue(string name)
         {
-            return _queues.GetOrAdd(name, new PersistentQueue(Path.Combine(_queueRootFolder, name)));
+            return _queues.GetOrAdd(name,
+                new PersistentQueue(Path.Combine(_queueRootFolder, name)));
         }
     }
 }

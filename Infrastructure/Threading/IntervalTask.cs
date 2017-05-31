@@ -10,13 +10,13 @@ namespace Infrastructure.Threading
 {
     public class IntervalTask
     {
-        public enum IdleOrWorking { Idle, Working }
+        public enum WorkingState { Idle, Busy }
 
         public static Task Start(
              TimeSpan pollInterval,
-             Func<IdleOrWorking> func,
+             Func<WorkingState> func,
              CancellationToken token,
-             Int32 stopAfterContinuousIdleLoopCount)
+             int stopAfterContinuousIdleLoopCount)
         {
             // We don't use Observable.Interval:
             // If we block, the values start bunching up behind each other.
@@ -36,7 +36,7 @@ namespace Infrastructure.Threading
                                 //不需要终止
                                 continue;
                             }
-                            if (workResult==IdleOrWorking.Idle)
+                            if (workResult==WorkingState.Idle)
                             {
                                 //空转计数器累加
                                 continuousIdleLoopCount++;
@@ -46,7 +46,7 @@ namespace Infrastructure.Threading
                                     break;
                                 }
                             }
-                            else if(workResult==IdleOrWorking.Working)
+                            else if(workResult==WorkingState.Busy)
                             {
                                 //如果有工作了,空转计数器清零
                                 continuousIdleLoopCount = 0;

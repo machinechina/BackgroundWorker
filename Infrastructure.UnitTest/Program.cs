@@ -14,6 +14,7 @@ namespace Infrastructure.UnitTest
             //   var a = Json.Encode(new A());
             var a = new A().ToJson();
             Console.Read();
+
         }
     }
 

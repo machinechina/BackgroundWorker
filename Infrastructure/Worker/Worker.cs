@@ -13,10 +13,10 @@ namespace Infrastructure.Workers
     {
         private CancellationTokenSource _cancellationTokenSource;
         private Task _messageDispatcherWorker;
-        private Int32 _loopInterval;
-        private Int32 _stopAfterContinuousIdleLoopCount;
+        private int _loopInterval;
+        private int _stopAfterContinuousIdleLoopCount;
 
-        public Worker(Int32 loopInterval, Int32 stopAfterContinuousIdleLoopCount = 0)
+        public Worker(int loopInterval, int stopAfterContinuousIdleLoopCount = 0)
         {
             _loopInterval = loopInterval;
             _stopAfterContinuousIdleLoopCount = stopAfterContinuousIdleLoopCount;
@@ -40,7 +40,7 @@ namespace Infrastructure.Workers
             }
             else//NO loop
             {
-                _messageDispatcherWorker = new Task<IdleOrWorking>(DoWork);
+                _messageDispatcherWorker = new Task<WorkingState>(DoWork);
                 _messageDispatcherWorker.Start();
             }
         }
@@ -63,14 +63,14 @@ namespace Infrastructure.Workers
             _cancellationTokenSource.Cancel();
         }
 
-        protected abstract IdleOrWorking DoWork();
+        protected abstract WorkingState DoWork();
         public void Wait()
         {
             _messageDispatcherWorker.Wait();
             IsRunning = false;
         }
 
-        protected Boolean IsCancellationRequested
+        protected bool IsCancellationRequested
         {
             get
             {

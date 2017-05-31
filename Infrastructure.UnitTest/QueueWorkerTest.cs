@@ -18,7 +18,7 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void EnqueueAndDequeueByWorkFactory()
         {
-            String[] data = new[] { "123", "456", "789", "000" };
+            string[] data = new[] { "123", "456", "789", "000" };
             using (var queueC = new PersistentQueue("d:\\_Queue\\BASIC\\C"))
             using (var session = queueC.OpenSession())
             {
@@ -26,15 +26,15 @@ namespace Infrastructure.UnitTest
                 session.Flush();
             }
 
-            ConcurrentBag<String> result = new ConcurrentBag<string>();
-            QueueWorkerCenter.Initialize("d:\\_Queue\\BASIC", result.Add, 1000, 1, 2, true);
+            ConcurrentBag<string> result = new ConcurrentBag<string>();
+            QueueWorkerBus.Initialize("d:\\_Queue\\BASIC", result.Add, 1000, 1, 2, true);
 
-            QueueWorkerCenter.Enqueue("A", data[0]);
-            QueueWorkerCenter.Enqueue("A", data[1]);
-            QueueWorkerCenter.Enqueue("B", data[2]);
+            QueueWorkerBus.Enqueue("A", data[0]);
+            QueueWorkerBus.Enqueue("A", data[1]);
+            QueueWorkerBus.Enqueue("B", data[2]);
 
             Thread.Sleep(5000);
-            QueueWorkerCenter.StopAll();
+            QueueWorkerBus.StopAll();
 
             Assert.AreEqual(data.Length, result.Count);
             Assert.AreEqual(3, Directory.GetDirectories("d:\\_Queue\\BASIC").Length);
@@ -43,18 +43,18 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void EnqueueAndDequeueByWorkFactoryLazy()
         {
-            String[] data = new[] { "123", "456", "789", "000" };
+            string[] data = new[] { "123", "456", "789", "000" };
 
-            ConcurrentBag<String> result = new ConcurrentBag<string>();
-            QueueWorkerCenter.Initialize("d:\\_Queue\\BASIC", result.Add, 1000);
+            ConcurrentBag<string> result = new ConcurrentBag<string>();
+            QueueWorkerBus.Initialize("d:\\_Queue\\BASIC", result.Add, 1000);
 
-            QueueWorkerCenter.Enqueue("A", data[0]);
-            QueueWorkerCenter.Enqueue("A", data[1]);
-            QueueWorkerCenter.Enqueue("B", data[2]);
-            QueueWorkerCenter.Enqueue("C", data[3]);
+            QueueWorkerBus.Enqueue("A", data[0]);
+            QueueWorkerBus.Enqueue("A", data[1]);
+            QueueWorkerBus.Enqueue("B", data[2]);
+            QueueWorkerBus.Enqueue("C", data[3]);
 
             Thread.Sleep(5000);
-            QueueWorkerCenter.StopAll();
+            QueueWorkerBus.StopAll();
 
             Assert.AreEqual(data.Length, result.Count);
             Assert.AreEqual(3, Directory.GetDirectories("d:\\_Queue\\BASIC").Length);
@@ -85,18 +85,18 @@ namespace Infrastructure.UnitTest
 
             //Load 1000 queues and start 1000 workers
 
-            ConcurrentQueue<String> result = new ConcurrentQueue<string>();
+            ConcurrentQueue<string> result = new ConcurrentQueue<string>();
             //修改这几个参数测试性能与线程数量
-            QueueWorkerCenter.Initialize("d:\\_Queue\\STRESS", result.Enqueue, 1000, 0, 2, true);
+            QueueWorkerBus.Initialize("d:\\_Queue\\STRESS", result.Enqueue, 1000, 0, 2, true);
 
             Parallel.For(0, queueCount, i =>
             {
-                QueueWorkerCenter.Enqueue($"{i}", Guid.NewGuid().ToString());
+                QueueWorkerBus.Enqueue($"{i}", Guid.NewGuid().ToString());
             });
 
             Thread.Sleep(5000);
 
-            QueueWorkerCenter.StopAll();
+            QueueWorkerBus.StopAll();
 
             Assert.AreEqual(queueCount * 1.5, result.Count);
             Assert.AreEqual(queueCount, Directory.GetDirectories("d:\\_Queue\\STRESS").Length);
@@ -105,16 +105,16 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void ConcurrentEnqueue()
         {
-            ConcurrentQueue<String> result = new ConcurrentQueue<string>();
-            QueueWorkerCenter.Initialize("d:\\_Queue\\ENQUEUE", d => Thread.Sleep(1000), 1000, 0, 10);
+            ConcurrentQueue<string> result = new ConcurrentQueue<string>();
+            QueueWorkerBus.Initialize("d:\\_Queue\\ENQUEUE", d => Thread.Sleep(1000), 1000, 0, 10);
             Parallel.For(0, 100, _ =>
             {
                 //检查并发会不会造成一个队列的Workers创建了多次
-                QueueWorkerCenter.Enqueue($"A", Guid.NewGuid().ToString());
+                QueueWorkerBus.Enqueue($"A", Guid.NewGuid().ToString());
             });
             Thread.Sleep(5000);
 
-            QueueWorkerCenter.StopAll();
+            QueueWorkerBus.StopAll();
         }
 
         [TestMethod]
@@ -124,8 +124,8 @@ namespace Infrastructure.UnitTest
             {
                 db.Database.ExecuteSqlCommand("delete from TestTables");
             }
-            ConcurrentQueue<String> result = new ConcurrentQueue<string>();
-            QueueWorkerCenter.Initialize("d:\\_Queue\\ENQUEUE", d =>
+            ConcurrentQueue<string> result = new ConcurrentQueue<string>();
+            QueueWorkerBus.Initialize("d:\\_Queue\\ENQUEUE", d =>
             {
                 using (var db = new TestModel())
                 {
@@ -141,11 +141,11 @@ namespace Infrastructure.UnitTest
             Parallel.For(0, 100, _ =>
             {
                 //检查并发会不会造成一个队列的Workers创建了多次
-                QueueWorkerCenter.Enqueue($"A", Guid.NewGuid().ToString());
+                QueueWorkerBus.Enqueue($"A", Guid.NewGuid().ToString());
             });
             Thread.Sleep(5000);
 
-            QueueWorkerCenter.StopAll();
+            QueueWorkerBus.StopAll();
 
             using (var db = new TestModel())
             {
@@ -173,9 +173,9 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void EnqueueAndDequeue()
         {
-            String[] data = new[] { "123", "456", "789" };
-            List<String> result = new List<string>();
-            DeQueueWorker worker = new DeQueueWorker("d:\\_Queue\\A", result.Add, 1000);
+            string[] data = new[] { "123", "456", "789" };
+            List<string> result = new List<string>();
+            QueueWorker.QueueWorker worker = new QueueWorker.QueueWorker("d:\\_Queue\\A", result.Add, 1000);
             worker.Start();
             worker.Enqueue(data[0]);
             worker.Enqueue(data[1]);
@@ -205,9 +205,9 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void WorkerShouldStopAfterContinuousIdleLoops()
         {
-            String[] data = new[] { "123", "456", "789" };
-            List<String> result = new List<string>();
-            DeQueueWorker worker = new DeQueueWorker("d:\\_Queue\\A", d => Thread.Sleep(1000), 1000, 3);
+            string[] data = new[] { "123", "456", "789" };
+            List<string> result = new List<string>();
+            QueueWorker.QueueWorker worker = new QueueWorker.QueueWorker("d:\\_Queue\\A", d => Thread.Sleep(1000), 1000, 3);
             worker.Start();
             worker.Enqueue(data[0]);
             worker.Enqueue(data[1]);
@@ -221,7 +221,7 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void ConcurrentBagAddDistinctItems()
         {
-            List<String> data = new List<string>();
+            List<string> data = new List<string>();
             var random = new Random();
             for (int i = 0; i < 1000; i++)
             {
@@ -232,7 +232,7 @@ namespace Infrastructure.UnitTest
 
             for (int i = 0; i < 10; i++)
             {
-                ConcurrentBag<String> bag = new ConcurrentBag<string>();
+                ConcurrentBag<string> bag = new ConcurrentBag<string>();
                 data.AsParallel().ForAll(d =>
                 {
                     lock (data)

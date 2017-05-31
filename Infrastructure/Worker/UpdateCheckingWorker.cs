@@ -14,13 +14,13 @@ namespace Infrastructure.Workers
         {
         }
 
-        protected override IdleOrWorking DoWork()
+        protected override WorkingState DoWork()
         {
             Helper.CheckUpdate(() =>
              {
                  Cancel();
              });
-            return IdleOrWorking.Working;
+            return WorkingState.Busy;
         }
     }
 }
