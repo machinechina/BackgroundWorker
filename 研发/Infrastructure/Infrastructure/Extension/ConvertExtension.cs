@@ -8,12 +8,12 @@ namespace Infrastructure.Extensions
 {
     public static partial class Extension
     {
-        public static String ToJson(this Object obj)
+        public static string ToJson(this Object obj)
         {
             return new JavaScriptSerializer().Serialize(obj);
         }
 
-        public static T JsonToObject<T>(this String json)
+        public static T JsonToObject<T>(this string json)
         {
             return new JavaScriptSerializer().Deserialize<T>(json);
         }

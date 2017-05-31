@@ -24,6 +24,6 @@ namespace Infrastructure.UnitTest
     public class TestTable
     {
         [Key]
-        public String TestColumn1 { get; set; }
+        public string TestColumn1 { get; set; }
     }
 }

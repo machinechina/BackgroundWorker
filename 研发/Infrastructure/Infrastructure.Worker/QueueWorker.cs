@@ -11,27 +11,27 @@ namespace Infrastructure.QueueWorker
     /// 根据输入的队列名创建队列,指定出列操作
     /// Start后会循环取出队列中的数据,并执行指定的操作
     /// </summary>
-    public class DeQueueWorker : Worker
+    public class QueueWorker : Worker
     {
         private IPersistentQueue _queue;
-        private Action<String> _action;
-        public String QueueName { get; }
+        private Action<string> _action;
+        public string QueueName { get; }
 
-        public DeQueueWorker(String queueName, Action<String> action, Int32 waitInterval, Int32 stopAfterContinuousIdleLoopCount = 0) : base(waitInterval, stopAfterContinuousIdleLoopCount)
+        public QueueWorker(string queueName, Action<string> action, int waitInterval, int stopAfterContinuousIdleLoopCount = 0) : base(waitInterval, stopAfterContinuousIdleLoopCount)
         {
-            _queue = QueueWorkerCenter.GetOrCreateQueue(queueName);
+            _queue = QueueWorkerBus.GetOrCreateQueue(queueName);
             _action = action;
             QueueName = queueName;
         }
 
-        public DeQueueWorker(IPersistentQueue queue, String queueName, Action<String> action, Int32 waitInterval, Int32 stopAfterContinuousIdleLoopCount = 0) : base(waitInterval, stopAfterContinuousIdleLoopCount)
+        public QueueWorker(IPersistentQueue queue, string queueName, Action<string> action, int waitInterval, int stopAfterContinuousIdleLoopCount = 0) : base(waitInterval, stopAfterContinuousIdleLoopCount)
         {
             _queue = queue;
             _action = action;
             QueueName = queueName;
         }
 
-        public void Enqueue(String data)
+        public void Enqueue(string data)
         {
             using (var session = _queue.OpenSession())
             {
@@ -40,7 +40,7 @@ namespace Infrastructure.QueueWorker
             }
         }
 
-        protected override IdleOrWorking DoWork()
+        protected override WorkingState DoWork()
         {
             var isWorking = false;
             using (var session = _queue.OpenSession())
@@ -67,7 +67,7 @@ namespace Infrastructure.QueueWorker
                 }
             }
 
-            return isWorking ? IdleOrWorking.Working : IdleOrWorking.Idle;
+            return isWorking ? WorkingState.Busy : WorkingState.Idle;
         }
     }
 }
