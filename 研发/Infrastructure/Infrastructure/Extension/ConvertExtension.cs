@@ -8,7 +8,7 @@ namespace Infrastructure.Extensions
 {
     public static partial class Extension
     {
-        public static string ToJson(this Object obj)
+        public static string ToJson(this object obj)
         {
             return new JavaScriptSerializer().Serialize(obj);
         }

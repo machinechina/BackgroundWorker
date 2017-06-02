@@ -101,11 +101,18 @@ namespace Infrastructure.Helpers
             Log(msg + ex.ToString());
         }
 
+        private static readonly object logLocker = new object();
         public static void Log(string msg)
         {
             try
             {
-                File.AppendAllText($"{Environment.CurrentDirectory}\\{DateTime.Now.ToString("yyyyMMdd")}.log", DateTime.Now.ToString() + "---" + msg + "\n\n\n");
+                lock (logLocker)
+                {
+                    StreamWriter sw;
+                    sw = File.AppendText($"{Environment.CurrentDirectory}\\{DateTime.Now.ToString("yyyyMMdd")}.log");
+                    sw.WriteLine(DateTime.Now.ToString() + "---" + msg + "\n\n\n");
+                    sw.Close();
+                }
             }
             catch
             {
