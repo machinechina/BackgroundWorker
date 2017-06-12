@@ -10,7 +10,7 @@ namespace Infrastructure.Threading
 {
     public class IntervalTask
     {
-        public enum WorkingState { Idle, Busy }
+        public enum WorkingState { IDLE, BUSY }
 
         public static Task Start(
              TimeSpan pollInterval,
@@ -36,7 +36,7 @@ namespace Infrastructure.Threading
                                 //不需要终止
                                 continue;
                             }
-                            if (workResult==WorkingState.Idle)
+                            if (workResult==WorkingState.IDLE)
                             {
                                 //空转计数器累加
                                 continuousIdleLoopCount++;
@@ -46,7 +46,7 @@ namespace Infrastructure.Threading
                                     break;
                                 }
                             }
-                            else if(workResult==WorkingState.Busy)
+                            else if(workResult==WorkingState.BUSY)
                             {
                                 //如果有工作了,空转计数器清零
                                 continuousIdleLoopCount = 0;

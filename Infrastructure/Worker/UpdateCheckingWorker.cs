@@ -20,7 +20,7 @@ namespace Infrastructure.Workers
              {
                  Cancel();
              });
-            return WorkingState.Busy;
+            return WorkingState.BUSY;
         }
     }
 }

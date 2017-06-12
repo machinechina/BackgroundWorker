@@ -30,17 +30,20 @@ namespace Infrastructure.QueueWorker
         protected override IntervalTask.WorkingState DoWork()
         {
             Directory.GetDirectories(_queueRootFolder, "*", SearchOption.TopDirectoryOnly)
-                   .AsParallel().ForAll(file =>
+                   .AsParallel().ForAll(queuePath =>
                    {
-                       var queueName = Path.GetFileName(file);
-                       using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, queueName), TimeSpan.FromSeconds(30)))
-                           if (queue?.EstimatedCountOfItemsInQueue > 0)
-                           {
-                               QueueWorkerBus.StartWorkersForQueue(queueName);
-                           }
+                       if (File.Exists(Path.Combine(queuePath, "meta.state")))//检验是否是queue的文件夹
+                       {
+                           var queueName = Path.GetFileName(queuePath);
+                           using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, queueName), TimeSpan.FromSeconds(30)))
+                               if (queue?.EstimatedCountOfItemsInQueue > 0)
+                               {
+                                   QueueWorkerBus.StartWorkersForQueue(queueName);
+                               }
+                       }
                    });
 
-            return IntervalTask.WorkingState.Busy;
+            return IntervalTask.WorkingState.BUSY;
         }
     }
 }
