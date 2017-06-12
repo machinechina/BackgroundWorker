@@ -55,7 +55,7 @@ namespace Infrastructure.QueueWorker
                     Helper.Log(ex, msg);
                 }
             }
-            return isWorking ? WorkingState.Busy : WorkingState.Idle;
+            return isWorking ? WorkingState.BUSY : WorkingState.IDLE;
         }
 
     }

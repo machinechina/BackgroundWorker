@@ -20,7 +20,7 @@ namespace Infrastructure.Helpers
                 return System.Diagnostics.Process.GetCurrentProcess().ProcessName;
             }
         }
-        public static void CheckAdminRights()
+        public static void EnsureAdminRights()
         {
             var wi = WindowsIdentity.GetCurrent();
             var wp = new WindowsPrincipal(wi);
@@ -59,7 +59,7 @@ namespace Infrastructure.Helpers
             }
         }
 
-        public static void CheckSingleRunning(Mutex mutex)
+        public static void EnsureSingleRunning(Mutex mutex)
         {
             if (!mutex.WaitOne(TimeSpan.Zero, true))
             {
@@ -96,9 +96,16 @@ namespace Infrastructure.Helpers
             Console.WriteLine($"{DateTime.Now.ToString()} -- {msg}");
         }
 
+
         public static void Log(Exception ex, string msg = "")
         {
             Log(msg + ex.ToString());
+        }
+
+        public static void InfoAndLog(Exception ex, string msg = "")
+        {
+            Info(msg + msg);
+            Log(ex, msg);
         }
 
         private static readonly object logLocker = new object();
@@ -171,7 +178,7 @@ namespace Infrastructure.Helpers
 
             try
             {
-                return (T)Convert.ChangeType(GetDeployQueryString(key), typeof(T));
+                return ( T )Convert.ChangeType(GetDeployQueryString(key), typeof(T));
             }
             catch (KeyNotFoundException)
             {
