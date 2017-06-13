@@ -65,6 +65,9 @@
     <Compile Include="Web\ErrorCode.cs" />
     <Compile Include="Web\ExceptionManager.cs" />
     <Compile Include="Web\SysException.cs" />
+    <Compile Include="Web\TimeoutWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Worker\IWorker.cs" />
     <Compile Include="Worker\UpdateCheckingWorker.cs" />
     <Compile Include="Worker\Worker.cs" />

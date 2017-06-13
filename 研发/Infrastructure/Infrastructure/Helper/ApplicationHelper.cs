@@ -104,7 +104,7 @@ namespace Infrastructure.Helpers
 
         public static void InfoAndLog(Exception ex, string msg = "")
         {
-            Info(msg + msg);
+            Info(msg + ex.ToString());
             Log(ex, msg);
         }
 

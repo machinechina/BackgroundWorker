@@ -14,8 +14,9 @@ namespace Infrastructure.QueueWorker
     /// </summary>
     public static class QueueWorkerBus
     {
-        private static Action<string> _action;
-        private static ConcurrentDictionary<string, DequeueWorker[]> _workers = new ConcurrentDictionary<string, DequeueWorker[]>();
+        private static Action<string> _dequeueAction;
+        private static ConcurrentDictionary<string, DequeueWorker[]> _workers
+            = new ConcurrentDictionary<string, DequeueWorker[]>();
         private static QueueWatchWorker _watchWorker;
 
         private static string _queueRootFolder;
@@ -39,7 +40,7 @@ namespace Infrastructure.QueueWorker
         {
             _queueRootFolder = queueRootFolder;
 
-            _action = dequeueAction
+            _dequeueAction = dequeueAction
                 ?? throw new Exception("必须指定操作");
 
             _waitInterval = loopInterval >= 0 ? loopInterval
@@ -102,7 +103,7 @@ namespace Infrastructure.QueueWorker
                          var workers = new DequeueWorker[_workersCountForEachQueue];
                          for (int i = 0; i < _workersCountForEachQueue; i++)
                          {
-                             workers[i] = new DequeueWorker(_queueRootFolder, queueName, _action, _waitInterval, _stopAfterContinuousIdleLoopCount);
+                             workers[i] = new DequeueWorker(_queueRootFolder, queueName, _dequeueAction, _waitInterval, _stopAfterContinuousIdleLoopCount);
                          }
                          return workers;
                      })
