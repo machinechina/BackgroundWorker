@@ -1,9 +1,12 @@
 ﻿//using System;
 //using System.Collections.Generic;
 //using System.Linq;
+//using System.Net;
 //using System.Net.Http;
 //using System.Text;
 //using System.Threading.Tasks;
+//using Infrastructure.Extensions;
+//using Infrastructure.Web;
 
 //namespace Infrastructure.Helper
 //{
@@ -11,7 +14,7 @@
 //    {
 //        HttpClient http { get; set; }
 
-//        public HttpUtility(String host, Dictionary<String, String> headers = null, int timeout = 3600)
+//        public HttpUtility(string host, Dictionary<string, string> headers = null, int timeout = 3600)
 //        {
 //            var handler = new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip };
 //            http = new HttpClient(handler);
@@ -23,21 +26,19 @@
 //            }
 //        }
 
-//        public T Get<T>(String url)
+//        public T Get<T>(string url)
 //        {
-//            Console.WriteLine(url);
-
 //            var response = http.GetAsync(url).Result;
 //            response.EnsureSuccessStatusCode();
 
 //            var resultTask = response.Content.ReadAsStringAsync().Result;
-//            var result = JsonConvert.DeserializeObject<ApiResult<T>>(resultTask);
+//            var result = resultTask.JsonToObject<ApiResult<T>>();
 //            if (result.ErrorCode != ErrorCode.NoError)
 //                throw new Exception(result.Message);
 //            return result.Result;
 //        }
 
-//        public Task<T> GetAsync<T>(String url)
+//        public Task<T> GetAsync<T>(string url)
 //        {
 //            return http.GetAsync(url).ContinueWith(task =>
 //            {
@@ -46,7 +47,7 @@
 //                return response.Content.ReadAsStringAsync().ContinueWith(task2 =>
 //                {
 //                    var resultTask = task2.Result;
-//                    var result = JsonConvert.DeserializeObject<ApiResult<T>>(resultTask);
+//                    var result = resultTask.JsonToObject<ApiResult<T>>();
 //                    if (result.ErrorCode != ErrorCode.NoError)
 //                        throw new Exception(result.Message);
 //                    return result.Result;
@@ -54,7 +55,7 @@
 //            }).Unwrap();
 //        }
 
-//        public T Post<T>(String url, Dictionary<String, String> args = null, HttpContent content = null)
+//        public T Post<T>(string url, Dictionary<string, string> args = null, HttpContent content = null)
 //        {
 //            if (args == null)
 //            {
@@ -66,13 +67,13 @@
 //            response.EnsureSuccessStatusCode();
 
 //            var resultTask = response.Content.ReadAsStringAsync().Result;
-//            var result = JsonConvert.DeserializeObject<ApiResult<T>>(resultTask);
+//            var result = resultTask.JsonToObject<ApiResult<T>>();
 //            if (result.ErrorCode != ErrorCode.NoError)
 //                throw new SysException(result.ErrorCode, result.Message);
 //            return result.Result;
 //        }
 
-//        public void Post(String url, Dictionary<String, String> args, HttpContent content = null)
+//        public void Post(string url, Dictionary<string, string> args, HttpContent content = null)
 //        {
 //            if (args == null)
 //            {
@@ -84,21 +85,13 @@
 //            response.EnsureSuccessStatusCode();
 
 //            var resultTask = response.Content.ReadAsStringAsync().Result;
-//            var result = JsonConvert.DeserializeObject<ApiResult>(resultTask);
+//            var result = resultTask.JsonToObject<ApiResult>();
 //            if (result.ErrorCode != ErrorCode.NoError)
 //                throw new SysException(result.ErrorCode, result.Message);
 //        }
 
-//        //public void PostModel<T>(String url, T data, HttpContent content = null)
-//        //{
-//        //    var response = http.PostAsJsonAsync<T>(url, data).Result;
-//        //    response.EnsureSuccessStatusCode();
-//        //    var resultTask = response.Content.ReadAsStringAsync().Result;
-//        //    var result = JsonConvert.DeserializeObject<ApiResult>(resultTask);
-//        //    if (result.ErrorCode != ErrorCode.NoError)
-//        //        throw new SysException(result.ErrorCode, result.Message);
-//        //}
-//        public Task<T> PostAsync<T>(String url, Dictionary<String, String> args, HttpContent content = null)
+ 
+//        public Task<T> PostAsync<T>(string url, Dictionary<string, string> args, HttpContent content = null)
 //        {
 //            if (content == null)
 //                content = new FormUrlEncodedContent(args);
@@ -110,7 +103,7 @@
 //                return response.Content.ReadAsStringAsync().ContinueWith(task2 =>
 //                {
 //                    var resultTask = task2.Result;
-//                    var result = JsonConvert.DeserializeObject<ApiResult<T>>(resultTask);
+//                    var result = resultTask.JsonToObject<ApiResult<T>>();
 //                    if (result.ErrorCode != ErrorCode.NoError)
 //                        throw new SysException(result.ErrorCode, result.Message);
 //                    return result.Result;
