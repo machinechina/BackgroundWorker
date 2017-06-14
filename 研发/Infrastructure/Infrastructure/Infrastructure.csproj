@@ -58,6 +58,7 @@
     <Compile Include="Helper\ConfigurationHelper.cs" />
     <Compile Include="Extension\ConvertExtension.cs" />
     <Compile Include="Helper\ApplicationHelper.cs" />
+    <Compile Include="Helper\LogHelper.cs" />
     <Compile Include="Helper\WebHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Threading\IntervalTask.cs" />
