@@ -91,40 +91,7 @@ namespace Infrastructure.Helpers
             }
         }
 
-        public static void Info(string msg)
-        {
-            Console.WriteLine($"{DateTime.Now.ToString()} -- {msg}");
-        }
 
-
-        public static void Log(Exception ex, string msg = "")
-        {
-            Log(msg + ex.ToString());
-        }
-
-        public static void InfoAndLog(Exception ex, string msg = "")
-        {
-            Info(msg + ex.ToString());
-            Log(ex, msg);
-        }
-
-        private static readonly object logLocker = new object();
-        public static void Log(string msg)
-        {
-            try
-            {
-                lock (logLocker)
-                {
-                    StreamWriter sw;
-                    sw = File.AppendText($"{Environment.CurrentDirectory}\\{DateTime.Now.ToString("yyyyMMdd")}.log");
-                    sw.WriteLine(DateTime.Now.ToString() + "---" + msg + "\n\n\n");
-                    sw.Close();
-                }
-            }
-            catch
-            {
-            }
-        }
 
         public static string Version
         {

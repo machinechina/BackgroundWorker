@@ -8,7 +8,7 @@
 //using Infrastructure.Extensions;
 //using Infrastructure.Web;
 
-//namespace Infrastructure.Helper
+//namespace Infrastructure.Helpers
 //{
 //    public class WebHelper
 //    {
