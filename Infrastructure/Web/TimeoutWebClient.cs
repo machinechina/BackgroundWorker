@@ -9,12 +9,12 @@ namespace Infrastructure.Web
 {
     public class TimeoutWebClient : WebClient
     {
-        private int _timeout;
+        private int _timeoutMilliseconds;
 
         protected override WebRequest GetWebRequest(Uri address)
         {
             var req = base.GetWebRequest(address);
-            req.Timeout = _timeout;
+            req.Timeout = _timeoutMilliseconds;
             //有些server对于没有UA的请求会500(多数是他们验证UA直接抛异常了)
             (( HttpWebRequest )req).UserAgent =
             "Mozilla/5.0 (Windows NT 6.3; Win64; x64) " +
@@ -24,9 +24,9 @@ namespace Infrastructure.Web
             return req;
         }
 
-        public TimeoutWebClient(int timeout = 0)
+        public TimeoutWebClient(int timeoutMilliseconds = 0)
         {
-            _timeout = timeout;
+            _timeoutMilliseconds = timeoutMilliseconds;
         }
     }
 }
