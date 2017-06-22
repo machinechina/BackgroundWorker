@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extension\DateTimeExtension.cs" />
     <Compile Include="Helper\ConfigurationHelper.cs" />
     <Compile Include="Extension\ConvertExtension.cs" />
     <Compile Include="Helper\ApplicationHelper.cs" />
