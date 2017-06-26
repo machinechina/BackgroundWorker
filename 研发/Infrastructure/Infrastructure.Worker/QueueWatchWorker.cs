@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DiskQueue;
+using Infrastructure.Helpers;
 using Infrastructure.Threading;
 using Infrastructure.Workers;
 
@@ -38,6 +39,7 @@ namespace Infrastructure.QueueWorker
                            using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, queueName), TimeSpan.FromSeconds(30)))
                                if (queue?.EstimatedCountOfItemsInQueue > 0)
                                {
+                                   Helper.Log($"Queue {queueName} ready to awaken");
                                    QueueWorkerBus.StartWorkersForQueue(queueName);
                                }
                        }

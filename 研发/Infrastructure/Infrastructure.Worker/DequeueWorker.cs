@@ -47,12 +47,18 @@ namespace Infrastructure.QueueWorker
                 var dataString = Encoding.UTF8.GetString(data);
                 try
                 {
+                    Helper.Log($"Start Processing Dequeue Data : {dataString}");
                     _action(dataString);
                 }
                 catch (Exception ex)
                 {
-                    var msg = $"Error Processing Dequeue Data : {dataString}\n";
-                    Helper.Log(ex, msg);
+                    var msg = $"Error Processing Dequeue Data : {dataString}";
+                    Helper.InfoAndLog(ex, msg);
+                }
+                finally
+                {
+                    //防止在处理过程中断电
+                    Helper.Log($"End Processing Dequeue Data : {dataString}");
                 }
             }
             return isWorking ? WorkingState.BUSY : WorkingState.IDLE;

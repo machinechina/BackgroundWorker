@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DiskQueue;
+using Infrastructure.Extension;
 using Infrastructure.QueueWorker;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,30 +17,47 @@ namespace Infrastructure.UnitTest
     public class QueueWorkerTest
     {
         private readonly string queryRoot = "d:\\_Queue";
+        private readonly string testHistory = "d:\\_TestHistory";
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            Directory.Move(queryRoot, queryRoot.PathCombine(testHistory).PathCombine(DateTime.Now.ToFileTime().ToString()));
+        }
 
         [TestMethod]
-        public void EnqueueAndDequeueByWorkFactory()
+        public void EnqueueAndDequeueByWorkBus()
         {
-            string[] data = new[] { "123", "456", "789", "000" };
-            using (var queueC = new PersistentQueue("d:\\_Queue\\BASIC\\C"))
+            string[] data = new[] { "000", "111", "222", "333", "444", "555" };
+            using (var queueC = new PersistentQueue(queryRoot.PathCombine("A")))
             using (var session = queueC.OpenSession())
             {
-                session.Enqueue(Encoding.UTF8.GetBytes(data[3]));
+                session.Enqueue(Encoding.UTF8.GetBytes(data[0]));
                 session.Flush();
             }
 
             ConcurrentBag<string> result = new ConcurrentBag<string>();
-            QueueWorkerBus.CreateDequeuers("d:\\_Queue\\BASIC", result.Add, 1000, 1, 2);
+            QueueWorkerBus.CreateDequeuers(queryRoot, result.Add,
+               loopInterval: 1000,
+                idleLoopCountBeforeStopping: 3,
+                workersCountForEachQueue: 2);
 
-            QueueWorkerBus.Enqueue(queryRoot,"A", data[0]);
-            QueueWorkerBus.Enqueue(queryRoot,"A", data[1]);
-            QueueWorkerBus.Enqueue(queryRoot,"B", data[2]);
+            QueueWorkerBus.Enqueue(queryRoot, "A", data[1]);
+            QueueWorkerBus.Enqueue(queryRoot, "A", data[2]);
+            QueueWorkerBus.Enqueue(queryRoot, "B", data[3]);
 
-            Thread.Sleep(15000);
+            // 3*1000=3秒后,转入休眠
+            Thread.Sleep(5000);
+
+            // 监测任务每10秒工作一次,发现有任务唤醒工作任务
+            QueueWorkerBus.Enqueue(queryRoot, "B", data[4]);
+            QueueWorkerBus.Enqueue(queryRoot, "C", data[5]);
+            Thread.Sleep(10000);
+
             QueueWorkerBus.StopAllDequeuers();
 
             Assert.AreEqual(data.Length, result.Count);
-            Assert.AreEqual(3, Directory.GetDirectories("d:\\_Queue\\BASIC").Length);
+            Assert.AreEqual(3, Directory.GetDirectories(queryRoot).Length);
         }
 
 
@@ -49,7 +67,7 @@ namespace Infrastructure.UnitTest
             DoQueueWorkFactoryQueueCountStressTest(100);
         }
 
-        private  void DoQueueWorkFactoryQueueCountStressTest(int queueCount)
+        private void DoQueueWorkFactoryQueueCountStressTest(int queueCount)
         {
             //this create 1000 queue files
             Parallel.For(0, queueCount, i =>
@@ -74,7 +92,7 @@ namespace Infrastructure.UnitTest
 
             Parallel.For(0, queueCount, i =>
             {
-                QueueWorkerBus.Enqueue(queryRoot,$"{i}", Guid.NewGuid().ToString());
+                QueueWorkerBus.Enqueue(queryRoot, $"{i}", Guid.NewGuid().ToString());
             });
 
             Thread.Sleep(15000);
