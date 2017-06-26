@@ -96,6 +96,10 @@ namespace Infrastructure.Helpers
                        "强制管理员权限运行程序可能导致无法自动升级 \n");
                     }
                 }
+                else
+                {
+                    Log($"Native Run as Admin : {Environment.GetCommandLineArgs().ToJointString()}");
+                }
 
                 #endregion Built-in admin
             }
@@ -138,9 +142,13 @@ namespace Infrastructure.Helpers
 
                     Environment.Exit(0);
                 }
-                else if (Environment.GetCommandLineArgs().Contains("GrantUpdating"))//以管理员重新运行appref
+                else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData?[0] == "GrantUpdating")//以管理员重新运行appref
                 {
-                    Log($"RUN_AS_ADMIN 3/3 :  {Environment.GetCommandLineArgs().ToJointString()} ");
+                    Log($"RUN_AS_ADMIN 3/3 :  {Environment.GetCommandLineArgs().ToJointString()} {AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.ToJointString()} ");
+                }
+                else
+                {
+                    Log($"Native Run as Admin : {Environment.GetCommandLineArgs().ToJointString()}");
                 }
 
                 #endregion Runas admin
