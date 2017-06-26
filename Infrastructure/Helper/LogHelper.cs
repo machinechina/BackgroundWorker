@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Helpers
 {
@@ -13,7 +9,6 @@ namespace Infrastructure.Helpers
         {
             Console.WriteLine($"{DateTime.Now.ToString()} -- {msg}");
         }
-
 
         public static void Log(Exception ex, string msg = "")
         {
@@ -26,21 +21,33 @@ namespace Infrastructure.Helpers
             Log(ex, msg);
         }
 
+        public static void InfoAndLog(string msg)
+        {
+            Info(msg);
+            Log(msg);
+        }
+
         private static readonly object logLocker = new object();
+
         public static void Log(string msg)
         {
+            StreamWriter sw = null;
             try
             {
                 lock (logLocker)
                 {
-                    StreamWriter sw;
-                    sw = File.AppendText($"{Environment.CurrentDirectory}\\{DateTime.Now.ToString("yyyyMMdd")}.log");
+                    var logDir = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\Logs.{AppName}";
+                    //"If the directory already exists, this method does not create a new directory, but it returns a DirectoryInfo object for the existing directory." 
+                    Directory.CreateDirectory(logDir);
+
+                    sw = File.AppendText($"{logDir}\\{DateTime.Now.ToString("yyyyMMdd")}.log");
                     sw.WriteLine(DateTime.Now.ToString() + "---" + msg + "\n\n\n");
-                    sw.Close();
                 }
             }
-            catch
+            catch { }
+            finally
             {
+                sw?.Close();
             }
         }
     }

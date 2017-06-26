@@ -19,6 +19,7 @@
     </SccAuxPath>
     <SccProvider>
     </SccProvider>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -56,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extension\DateTimeExtension.cs" />
+    <Compile Include="Extension\StringExtension.cs" />
     <Compile Include="Helper\ConfigurationHelper.cs" />
     <Compile Include="Extension\ConvertExtension.cs" />
     <Compile Include="Helper\ApplicationHelper.cs" />

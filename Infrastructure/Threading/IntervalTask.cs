@@ -31,22 +31,23 @@ namespace Infrastructure.Threading
                         try
                         {
                             var workResult = func();
-                            if (stopAfterContinuousIdleLoopCount<=0)
+                            if (stopAfterContinuousIdleLoopCount <= 0)
                             {
                                 //不需要终止
                                 continue;
                             }
-                            if (workResult==WorkingState.IDLE)
+                            if (workResult == WorkingState.IDLE)
                             {
                                 //空转计数器累加
                                 continuousIdleLoopCount++;
-                                if (continuousIdleLoopCount>=stopAfterContinuousIdleLoopCount)
+                                if (continuousIdleLoopCount >= stopAfterContinuousIdleLoopCount)
                                 {
                                     //空转一定周期后,结束任务
+                                    Helper.Log($"{Thread.CurrentThread.ManagedThreadId} Sleep after {continuousIdleLoopCount} empty loops");
                                     break;
                                 }
                             }
-                            else if(workResult==WorkingState.BUSY)
+                            else if (workResult == WorkingState.BUSY)
                             {
                                 //如果有工作了,空转计数器清零
                                 continuousIdleLoopCount = 0;
