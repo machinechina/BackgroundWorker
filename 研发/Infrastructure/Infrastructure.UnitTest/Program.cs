@@ -11,9 +11,11 @@ namespace Infrastructure.UnitTest
     {
         public static void Main(string[] args)
         {
-            //   var a = Json.Encode(new A());
-            var a = new A().ToJson();
-            Console.Read();
+            Helpers.Helper.RunAsBackgroundService(() =>
+            {
+
+            }, null);
+
 
         }
     }
