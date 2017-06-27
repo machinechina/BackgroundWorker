@@ -7,25 +7,20 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Web;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using Infrastructure.Extension;
 using Infrastructure.Extensions;
+using Infrastructure.Workers;
 
 namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
-        public static string AppName
+        public enum UserRights
         {
-            get
-            {
-                return System.Diagnostics.Process.GetCurrentProcess().ProcessName;
-            }
-        }
-
-        public enum AdminRights
-        {
+            NORMAL_USER,
             BUILTIN_ADMIN,
             RUN_AS_ADMIN
         }
@@ -35,6 +30,54 @@ namespace Infrastructure.Helpers
             var wi = WindowsIdentity.GetCurrent();
             var wp = new WindowsPrincipal(wi);
             return wp.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        /// <summary>
+        /// 控制台后台服务框架
+        /// </summary>
+        /// <param name="tryBlock">核心代码</param>
+        /// <param name="finallyBlock">清理代码</param>
+        /// <param name="userRights">需要的权限</param>
+        public static void RunAsBackgroundService(Action tryBlock, Action finallyBlock = null, UserRights userRights = UserRights.NORMAL_USER, int updateInterval = 3600000)
+        {
+            var mutex = new Mutex(true, ProductDescription.AppName);
+            var exitForUpdating = false;
+
+            try
+            {
+                EnsureSingleRunning(mutex);
+
+                InitDeployQueryString();
+                EnsureUserRights(userRights);
+
+                Info($"{ProductDescription.Product}\n版本号:{ProductDescription.Version}\n");
+
+                tryBlock?.Invoke();
+
+                var updateWorker = new UpdateCheckingWorker(updateInterval);
+                updateWorker.Start();
+                updateWorker.Wait();
+                exitForUpdating = true;
+                Info("找到更新,准备重启...");
+
+                Console.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                InfoAndLog(ex);
+                Console.ReadLine();
+            }
+            finally
+            {
+                finallyBlock?.Invoke();
+
+                mutex.Close();
+
+                if (exitForUpdating)
+                {
+                    Application.Restart();
+                }
+            }
         }
 
         /// <summary>
@@ -54,12 +97,12 @@ namespace Infrastructure.Helpers
         /// 优点:
         /// 不依赖于系统
         /// 缺点:
-        /// 流程复制,程序一共要启动三次
+        /// 流程复杂,程序一共要启动三次
         /// [注意]只有第一次启动时能初始化url参数,因此<see cref="InitDeployQueryString"/>必须在此方法之前调用
         /// </summary>
-        public static void EnsureAdminRights(AdminRights adminRights = AdminRights.BUILTIN_ADMIN)
+        public static void EnsureUserRights(UserRights userRights = UserRights.BUILTIN_ADMIN)
         {
-            if (adminRights == AdminRights.BUILTIN_ADMIN)
+            if (userRights == UserRights.BUILTIN_ADMIN)
             {
                 #region Built-in admin
 
@@ -103,7 +146,7 @@ namespace Infrastructure.Helpers
 
                 #endregion Built-in admin
             }
-            else if (adminRights == AdminRights.RUN_AS_ADMIN)
+            else if (userRights == UserRights.RUN_AS_ADMIN)
             {
                 #region Runas admin
 
@@ -113,23 +156,13 @@ namespace Infrastructure.Helpers
 
                     var currentProcessName = Process.GetCurrentProcess().ProcessName + ".exe";
 
-                    using (MemoryStream memoryStream = new MemoryStream(AppDomain.CurrentDomain.ActivationContext.DeploymentManifestBytes))
-                    using (XmlTextReader xmlTextReader = new XmlTextReader(memoryStream))
-                    {
-                        var xDocument = XDocument.Load(xmlTextReader);
-                        var description = xDocument.Root.Elements().Where(e => e.Name.LocalName == "description").First();
-                        var publisher = description.Attributes().Where(a => a.Name.LocalName == "publisher").First().Value;
-                        var product = description.Attributes().Where(a => a.Name.LocalName == "product").First().Value;
-
-                        Process.Start(
+                    Process.Start(
                               new ProcessStartInfo
                               {
                                   FileName = currentProcessName,
                                   Verb = "runas",
-                                  Arguments = $"GrantAdmin {publisher} {product}"
+                                  Arguments = $"GrantAdmin {ProductDescription.Publisher} {ProductDescription.Product}"
                               });
-                    }
-
                     Environment.Exit(0);
                 }
                 else if (Environment.GetCommandLineArgs().Contains("GrantAdmin"))//以管理员运行
@@ -142,7 +175,7 @@ namespace Infrastructure.Helpers
 
                     Environment.Exit(0);
                 }
-                else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData?[0] == "GrantUpdating")//以管理员重新运行appref
+                else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments?.ActivationData?[0] == "GrantUpdating")//以管理员重新运行appref
                 {
                     Log($"RUN_AS_ADMIN 3/3 :  {Environment.GetCommandLineArgs().ToJointString()} {AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.ToJointString()} ");
                 }
@@ -187,14 +220,6 @@ namespace Infrastructure.Helpers
             }
         }
 
-        public static string Version
-        {
-            get
-            {
-                return ApplicationDeployment.IsNetworkDeployed ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : "";
-            }
-        }
-
         /// <summary>
         /// 通过网络部署时可以在安装链接后传递querystring(需要在项目属性中开启)
         /// 如http://....../CDN.ConsoleApp.application?SyncApiParam=123123
@@ -206,7 +231,7 @@ namespace Infrastructure.Helpers
         /// <returns></returns>
         private static IDictionary<string, string> _deployQuerys;
 
-        private static string _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys_" + AppName);
+        private static string _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys_" + ProductDescription.AppName);
 
         public static void InitDeployQueryString(params string[] requiredKeys)
         {
@@ -268,6 +293,33 @@ namespace Infrastructure.Helpers
             {
                 throw new KeyNotFoundException($"Missing param from url [{key}]");
             }
+        }
+
+        private class ProductDescription
+        {
+            static ProductDescription()
+            {
+                AppName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+
+                if (ApplicationDeployment.IsNetworkDeployed)
+                {
+                    Version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                    using (MemoryStream memoryStream = new MemoryStream(AppDomain.CurrentDomain.ActivationContext.DeploymentManifestBytes))
+                    using (XmlTextReader xmlTextReader = new XmlTextReader(memoryStream))
+                    {
+                        var xDocument = XDocument.Load(xmlTextReader);
+                        var description = xDocument.Root.Elements().Where(e => e.Name.LocalName == "description").First();
+
+                        Product = description.Attributes().Where(a => a.Name.LocalName == "product").First().Value;
+                        Publisher = description.Attributes().Where(a => a.Name.LocalName == "publisher").First().Value;
+                    }
+                }
+            }
+
+            public static string Product { get; set; } = "";
+            public static string Publisher { get; set; } = "";
+            public static string AppName { get; set; } = "";
+            public static string Version { get; set; } = "";
         }
     }
 }
