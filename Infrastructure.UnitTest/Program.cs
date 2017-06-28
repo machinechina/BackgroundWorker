@@ -19,10 +19,5 @@ namespace Infrastructure.UnitTest
 
         }
     }
-
-
-    public class A
-    {
-
-    }
+ 
 }
