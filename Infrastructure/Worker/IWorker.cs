@@ -21,6 +21,6 @@ namespace Infrastructure.Workers
         /// <summary>
         /// wait until worker stopped by itself
         /// </summary>
-        void Wait();
+        void WaitForExit();
     }
 }

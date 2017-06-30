@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestModel.cs" />
     <Compile Include="DataStructureTest.cs" />
+    <Compile Include="WorkerTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DiskQueue\DiskQueue\DiskQueue.csproj">

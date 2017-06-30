@@ -16,8 +16,8 @@ namespace Infrastructure.QueueWorker
     public class DequeueWorker : Worker
     {
         private Action<string> _action;
-        public string _queueRootFolder { get; }
-        public string _queueName { get; }
+        private string _queueRootFolder { get; }
+        private string _queueName { get; }
 
         public DequeueWorker(string queueRootFolder, string queueName, Action<string> action, int waitInterval, int stopAfterContinuousIdleLoopCount = 0)
             : base(waitInterval, stopAfterContinuousIdleLoopCount)
@@ -34,17 +34,22 @@ namespace Infrastructure.QueueWorker
         protected override WorkingState DoWork()
         {
             var isWorking = false;
-            byte[] data;
-            using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, _queueName), TimeSpan.FromSeconds(30)))
+            string dataString = null;
+            using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, _queueName), TimeSpan.FromSeconds(60)))
             using (var session = queue.OpenSession())
             {
-                data = session.Dequeue();
+                var data = session.Dequeue();
+                if (data != null)
+                {
+                    dataString = Encoding.UTF8.GetString(data);
+                    Helper.Log($"Get Dequeue Data : {dataString}");
+                }
+
                 session.Flush();
             }
-            if (data != null)
+            if (dataString != null)
             {
                 isWorking = true;
-                var dataString = Encoding.UTF8.GetString(data);
                 try
                 {
                     Helper.Log($"Start Processing Dequeue Data : {dataString}");

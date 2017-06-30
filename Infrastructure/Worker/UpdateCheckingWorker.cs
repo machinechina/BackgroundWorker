@@ -18,7 +18,7 @@ namespace Infrastructure.Workers
         {
             Helper.CheckUpdate(() =>
              {
-                 Cancel();
+                 Stop();
              });
             return WorkingState.BUSY;
         }

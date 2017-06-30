@@ -107,7 +107,8 @@ namespace DiskQueue.Implementation
             if (fileLock != null)
             {
                 fileLock.Dispose();
-                //如果此处另外一个进程加锁,会导致此进程无法删除锁文件
+                //在fileLock.Dispose后另一个进程创建了锁文件,
+                //此时本进程无法再次删除锁文件
                 try
                 {
                     File.Delete(target);
