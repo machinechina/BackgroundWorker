@@ -74,6 +74,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Worker\IWorker.cs" />
+    <Compile Include="Worker\ShortRunningWorker.cs" />
     <Compile Include="Worker\UpdateCheckingWorker.cs" />
     <Compile Include="Worker\Worker.cs" />
   </ItemGroup>

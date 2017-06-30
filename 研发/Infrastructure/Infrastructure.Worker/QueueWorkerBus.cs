@@ -81,7 +81,7 @@ namespace Infrastructure.QueueWorker
                 throw new Exception("队列根目录必须与CreateDequeuers指定的一致");
             }
 
-            using (var queue = PersistentQueue.WaitFor(Path.Combine(queueRootFolder, queueName), TimeSpan.FromSeconds(30)))
+            using (var queue = PersistentQueue.WaitFor(Path.Combine(queueRootFolder, queueName), TimeSpan.FromSeconds(60)))
             using (var session = queue.OpenSession())
             {
                 session.Enqueue(Encoding.UTF8.GetBytes(data));

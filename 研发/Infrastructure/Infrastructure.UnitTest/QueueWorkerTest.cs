@@ -22,6 +22,8 @@ namespace Infrastructure.UnitTest
         [TestCleanup]
         public void Cleanup()
         {
+            Directory.CreateDirectory(queryRoot);
+            Directory.CreateDirectory(testHistory);
             Directory.Move(queryRoot, queryRoot.PathCombine(testHistory).PathCombine(DateTime.Now.ToFileTime().ToString()));
         }
 
@@ -47,12 +49,12 @@ namespace Infrastructure.UnitTest
             QueueWorkerBus.Enqueue(queryRoot, "B", data[3]);
 
             // 3*1000=3秒后,转入休眠
-            Thread.Sleep(5000);
+            Thread.Sleep(10000);
 
             // 监测任务每10秒工作一次,发现有任务唤醒工作任务
             QueueWorkerBus.Enqueue(queryRoot, "B", data[4]);
             QueueWorkerBus.Enqueue(queryRoot, "C", data[5]);
-            Thread.Sleep(10000);
+            Thread.Sleep(15000);
 
             QueueWorkerBus.StopAllDequeuers();
 
@@ -186,9 +188,9 @@ namespace Infrastructure.UnitTest
             Enqueue("A", data[0]);
             Enqueue("A", data[1]);
             Enqueue("A", data[2]);
-            Thread.Sleep(3000);
+            Thread.Sleep(3000);  
             Assert.IsTrue(worker.IsRunning);
-            Thread.Sleep(5000);
+            Thread.Sleep(10000);
             Assert.IsFalse(worker.IsRunning);
         }
 

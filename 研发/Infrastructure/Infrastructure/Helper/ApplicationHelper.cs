@@ -56,7 +56,7 @@ namespace Infrastructure.Helpers
 
                 var updateWorker = new UpdateCheckingWorker(updateInterval);
                 updateWorker.Start();
-                updateWorker.Wait();
+                updateWorker.WaitForExit();
                 exitForUpdating = true;
                 Info("找到更新,准备重启...");
 
@@ -69,7 +69,7 @@ namespace Infrastructure.Helpers
             }
             finally
             {
-                finallyBlock?.Invoke();
+                   finallyBlock?.Invoke();
 
                 mutex.Close();
 

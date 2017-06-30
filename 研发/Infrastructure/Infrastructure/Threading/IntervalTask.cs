@@ -43,7 +43,6 @@ namespace Infrastructure.Threading
                                 if (continuousIdleLoopCount >= stopAfterContinuousIdleLoopCount)
                                 {
                                     //空转一定周期后,结束任务
-                                    Helper.Log($"{Thread.CurrentThread.ManagedThreadId} Sleep after {continuousIdleLoopCount} empty loops");
                                     break;
                                 }
                             }

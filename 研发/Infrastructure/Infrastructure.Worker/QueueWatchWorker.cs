@@ -36,10 +36,9 @@ namespace Infrastructure.QueueWorker
                        if (File.Exists(Path.Combine(queuePath, "meta.state")))//检验是否是queue的文件夹
                        {
                            var queueName = Path.GetFileName(queuePath);
-                           using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, queueName), TimeSpan.FromSeconds(30)))
+                           using (var queue = PersistentQueue.WaitFor(Path.Combine(_queueRootFolder, queueName), TimeSpan.FromSeconds(60)))
                                if (queue?.EstimatedCountOfItemsInQueue > 0)
                                {
-                                   Helper.Log($"Queue {queueName} ready to awaken");
                                    QueueWorkerBus.StartWorkersForQueue(queueName);
                                }
                        }
