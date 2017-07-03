@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,9 +12,17 @@ namespace Infrastructure.UnitTest
     {
         public static void Main(string[] args)
         {
-            //Helpers.Helper.RunAsBackgroundService(() =>
-            //{
-            //}, null);
+          
+
+
+            Console.ReadLine();
+        }
+
+
+
+
+        private static void ConcurrentEnqueDequeue(string[] args)
+        {
 
             if (args.Length > 0)
             {
@@ -22,7 +31,7 @@ namespace Infrastructure.UnitTest
                 {
                     Task.Run(() =>
                     {
-                        while (total>= 0)
+                        while (total >= 0)
                         {
                             try
                             {
@@ -78,8 +87,6 @@ namespace Infrastructure.UnitTest
                     });
                 }
             }
-
-            Console.ReadLine();
         }
     }
 }
