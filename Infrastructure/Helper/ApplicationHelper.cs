@@ -4,6 +4,7 @@ using System.Deployment.Application;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Principal;
 using System.Threading;
 using System.Web;
@@ -35,10 +36,11 @@ namespace Infrastructure.Helpers
         /// <summary>
         /// 控制台后台服务框架
         /// </summary>
+        /// <param name="configKeyAndFieldNames">需要初始化的配置项字段 key:配置项的key,value:配置项的名称</param>
         /// <param name="tryBlock">核心代码</param>
         /// <param name="finallyBlock">清理代码</param>
         /// <param name="userRights">需要的权限</param>
-        public static void RunAsBackgroundService(Action tryBlock, Action finallyBlock = null, UserRights userRights = UserRights.NORMAL_USER, int updateInterval = 3600000)
+        public static void RunAsBackgroundService(Dictionary<string, string> configKeyAndFieldNames, Action tryBlock, Action finallyBlock = null, UserRights userRights = UserRights.NORMAL_USER, int updateInterval = 3600000)
         {
             var mutex = new Mutex(true, ProductDescription.AppName);
             var exitForUpdating = false;
@@ -50,7 +52,24 @@ namespace Infrastructure.Helpers
                 InitDeployQueryString();
                 EnsureUserRights(userRights);
 
-                Info($"{ProductDescription.Product}\n版本号:{ProductDescription.Version}\n");
+                Info($"{ProductDescription.Product}\n版本号:{ProductDescription.Version}");
+
+                var callerType = new StackFrame(1).GetMethod().DeclaringType;
+                configKeyAndFieldNames.ForEach(configKeyAndFieldName =>
+                {
+                    var configField = callerType
+                     .GetField(configKeyAndFieldName.Value,
+                       BindingFlags.Public
+                       | BindingFlags.NonPublic
+                       | BindingFlags.Static
+                       | BindingFlags.Instance);
+                    var configValue = GetConfigFromDeployThenAppConfig(
+                            configKeyAndFieldName.Key,
+                            configField?.FieldType);
+                    configField?.SetValue(null, configValue);
+
+                    Info($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
+                });
 
                 tryBlock?.Invoke();
 
@@ -69,7 +88,7 @@ namespace Infrastructure.Helpers
             }
             finally
             {
-                   finallyBlock?.Invoke();
+                finallyBlock?.Invoke();
 
                 mutex.Close();
 
@@ -255,21 +274,26 @@ namespace Infrastructure.Helpers
             }
         }
 
-        public static T GetConfigFromDeployThenAppConfig<T>(string key)
+        public static object GetConfigFromDeployThenAppConfig(string key, Type type)
         {
             if (!ApplicationDeployment.IsNetworkDeployed)
             {
-                return GetAppConfig<T>(key);
+                return GetAppConfig(key, type);
             }
 
             try
             {
-                return ( T )Convert.ChangeType(GetDeployQueryString(key), typeof(T));
+                return Convert.ChangeType(GetDeployQueryString(key), type);
             }
             catch (KeyNotFoundException)
             {
-                return GetAppConfig<T>(key);
+                return GetAppConfig(key, type);
             }
+        }
+
+        public static T GetConfigFromDeployThenAppConfig<T>(string key)
+        {
+            return ( T )GetConfigFromDeployThenAppConfig(key, typeof(T));
         }
 
         private static string GetDeployQueryString(string key)
