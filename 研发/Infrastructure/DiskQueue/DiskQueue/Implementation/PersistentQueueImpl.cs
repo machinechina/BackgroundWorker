@@ -264,7 +264,8 @@ namespace DiskQueue.Implementation
 
         FileStream WaitForTransactionLog(byte[] transactionBuffer)
         {
-            for (int i = 0; i < 10; i++)
+            var error = "";
+            for (int i = 0; i < 20; i++)
             {
                 try
                 {
@@ -275,12 +276,13 @@ namespace DiskQueue.Implementation
                                           transactionBuffer.Length,
                                           FileOptions.SequentialScan | FileOptions.WriteThrough);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    error += $"{ex.Message}\n";
                     Thread.Sleep(250);
                 }
             }
-            throw new TimeoutException("Could not aquire transaction log lock");
+            throw new TimeoutException($"Could not aquire transaction log lock\n{error}");
         }
 
         public Entry Dequeue()

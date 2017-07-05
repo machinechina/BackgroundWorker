@@ -12,29 +12,33 @@ namespace Infrastructure.Helpers
     {
         public static T GetAppConfig<T>(string key)
         {
-            T val = default(T);
+            return ( T )GetAppConfig(key, typeof(T));
+        }
+
+        public static object GetAppConfig(string key, Type type)
+        {
             try
             {
                 var value = GetAppConfig(key);
-                if (typeof(T).IsEquivalentTo(typeof(Guid)))
+                if (type.IsEquivalentTo(typeof(Guid)))
                 {
-                    val = (T)Convert.ChangeType(new Guid(value), typeof(T));
+                    return Convert.ChangeType(new Guid(value), type);
                 }
                 else
                 {
-                    val = (T)Convert.ChangeType(value, typeof(T));
+                    return Convert.ChangeType(value, type);
                 }
             }
             catch (Exception)
             {
 
             }
-            return val;
+            return default(object);
         }
 
-        public static string GetAppConfig(string keyname, string configPath = "Config")
+        private static string GetAppConfig(string key, string configPath = "Config")
         {
-            var config = System.Configuration.ConfigurationManager.AppSettings[keyname];
+            var config = System.Configuration.ConfigurationManager.AppSettings[key];
             try
             {
                 if (string.IsNullOrWhiteSpace(config))
@@ -47,7 +51,7 @@ namespace Infrastructure.Helpers
                             XElement xml = XElement.Load(filePath);
                             if (xml != null)
                             {
-                                var element = xml.Elements().SingleOrDefault(e => e.Attribute("key") != null && e.Attribute("key").Value.Equals(keyname));
+                                var element = xml.Elements().SingleOrDefault(e => e.Attribute("key") != null && e.Attribute("key").Value.Equals(key));
                                 if (element != null)
                                 {
                                     config = element.Attribute("value").Value;
