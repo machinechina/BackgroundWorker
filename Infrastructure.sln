@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{19F815C5-1712-4FAE-88C6-65944B422C5F}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataStructure", "DataStructure", "{98981101-333D-4B53-9836-C3FC6789C15C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstallGuildGen", "InstallGuildGen\InstallGuildGen.csproj", "{4B28A129-BF01-4DD7-8565-526E5521F9E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tool", "Tool", "{70763C6A-1D15-487A-B563-66CFE25E8566}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,5 +56,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{D3F1301E-3C40-4FE5-9FF3-5D95D3A4F7E5} = {98981101-333D-4B53-9836-C3FC6789C15C}
 		{1CE72DCA-61B7-4865-B5CB-191D04FB5B46} = {98981101-333D-4B53-9836-C3FC6789C15C}
+		{4B28A129-BF01-4DD7-8565-526E5521F9E2} = {70763C6A-1D15-487A-B563-66CFE25E8566}
 	EndGlobalSection
 EndGlobal
