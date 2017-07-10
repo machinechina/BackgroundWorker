@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@@Title安装向导</title>
+    <style>
+        input {
+            width: 90% !important;
+        }
+
+        body, div, p, a.li, ul, dt, dd, dt, h1, h2, h3, h4, h5, h6 {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 14px;
+            font-weight: 100;
+            font-family: Microsoft Yahei;
+            line-height: 185%;
+        }
+
+        .divTitle {
+            margin-top: 10px;
+            border-bottom: solid 1px #ccc;
+            font-size: 16px;
+            height: 40px;
+            line-height: 40px;
+            padding-left: 20px;
+            color: #65758C;
+            background: #EEF1F8;
+            margin-bottom: 10px;
+        }
+
+        .Table td {
+            border: #EAEAEC 1px solid;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+        }
+
+        .tdleft {
+            width: 100px;
+            padding: 5px;
+            color: Gray;
+            text-align: right;
+        }
+
+        .SaveBtn {
+            background: #5CADEC;
+            padding: 2px 5px 2px 5px;
+            color: #fff;
+            font-size: 14px;
+            margin: 0px 5px 0px 5px;
+        }
+
+            .SaveBtn:hover {
+                background: #F4984D;
+            }
+    </style>
+
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="http://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js"></script>
+</head>
+<body>
+    <div class="divTitle">
+        @@Title安装向导
+    </div>
+    <table cellspacing="1" cellpadding="1" border="0" class="Table" style="width:98%;">
+        @@Rows
+        <tr class="tr">
+            <td class="tdleft">
+                <a id="submit" class="LinkBtn SaveBtn" style="cursor:pointer;">生成链接</a>
+                <a id="copy" class="LinkBtn LinkBtn" style="cursor:pointer;" onclick="$('#output_address').select();document.execCommand('copy')">复制链接</a>
+            </td>
+            <td class="tdright">
+                <input type="text" id="output_address" />
+            </td>
+        </tr>
+    </table>
+    <div>
+        <br />
+        <br />
+        <ul style="padding-left:100px;color:slategrey">
+
+            <li><h3>说明:</h3></li>
+            <li>
+                以上参数填好后点击<strong>生成链接</strong>,然后复制到服务器上的<strong>IE浏览器</strong>进行安装
+            </li>
+            <li>
+                对于多台服务器的配置,生成不同的链接后分别安装即可
+                (注意一台服务器只能安装一次)
+            </li>
+            <li>
+                如果以上配置有变动,在服务器上停止程序,然后用新的安装链接运行一次即可
+            </li>
+        </ul>
+        <br />
+        <br />
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+    $(function () {
+    });
+
+    $('#submit').click(function () {
+        var url = window.location.href.toLowerCase() + '@@AppName.application?'
+        $('input.customValue').filter(function (index) {
+            url += $(this).attr('id') + "=" + encodeURIComponent($(this).val())
+            if (index != $('input.customValue').length - 1) {
+                url += "&"
+            }
+        })
+
+        $('#output_address').val(url);
+
+    })
+</script>
+
+<script language="c#" runat="server">
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            using (var proc = new System.Diagnostics.Process
+            {
+                StartInfo =
+                        {
+                            WorkingDirectory=Server.MapPath("."),
+                            FileName =Server.MapPath("InstallGuideGen.exe"),
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            RedirectStandardError=true,
+                            RedirectStandardOutput=true
+                         }
+            })
+            {
+                proc.Start();
+                proc.WaitForExit();
+                if (!proc.ExitCode.Equals(0))
+                {
+                    Response.Write(proc.StandardError.ReadToEnd());
+                }
+            }
+        }
+    }
+</script>

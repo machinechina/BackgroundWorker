@@ -19,6 +19,28 @@ namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
+        #region Private Fields
+
+        /// <summary>
+        /// 通过网络部署时可以在安装链接后传递querystring(需要在项目属性中开启)
+        /// 如http://....../CDN.ConsoleApp.application?SyncApiParam=123123
+        /// 这样可以实现一次部署,不同配置
+        /// 但程序在本地再次打开时,将取不到这个参数,所以第一次安装后需要持久化
+        /// 尽可能早的调用InitDeployQueryString已持久化参数
+        /// 并在需要的时候用GetDeployQueryString获取
+        /// </summary>
+        /// <returns></returns>
+        private static IDictionary<string, string> _deployQuerys;
+
+        private static string _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys_" + ProductDescription.AppName);
+
+        #endregion Private Fields
+
+        #region Public Enums
+
+        /// <summary>
+        /// 程序运行角色
+        /// </summary>
         public enum UserRights
         {
             NORMAL_USER,
@@ -26,76 +48,47 @@ namespace Infrastructure.Helpers
             RUN_AS_ADMIN
         }
 
-        public static bool RunningInAdmin()
+        #endregion Public Enums
+
+        #region Public Methods
+
+        /// <summary>
+        /// 检查更新
+        /// </summary>
+        /// <param name="afterUpdated"></param>
+        public static void CheckUpdate(Action afterUpdated)
         {
-            var wi = WindowsIdentity.GetCurrent();
-            var wp = new WindowsPrincipal(wi);
-            return wp.IsInRole(WindowsBuiltInRole.Administrator);
+            UpdateCheckInfo info = null;
+
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                try
+                {
+                    ApplicationDeployment ad = ApplicationDeployment.CurrentDeployment;
+                    info = ad.CheckForDetailedUpdate();
+                    if (info.UpdateAvailable)
+                    {
+                        ad.Update();
+                        afterUpdated();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log(ex);
+                    throw new Exception($"升级到{info?.AvailableVersion?.ToString() ?? "最新版本"}时出错");
+                }
+            }
         }
 
         /// <summary>
-        /// 控制台后台服务框架
+        /// 确保单实例运行
         /// </summary>
-        /// <param name="configKeyAndFieldNames">需要初始化的配置项字段 key:配置项的key,value:配置项的名称</param>
-        /// <param name="tryBlock">核心代码</param>
-        /// <param name="finallyBlock">清理代码</param>
-        /// <param name="userRights">需要的权限</param>
-        public static void RunAsBackgroundService(Dictionary<string, string> configKeyAndFieldNames, Action tryBlock, Action finallyBlock = null, UserRights userRights = UserRights.NORMAL_USER, int updateInterval = 3600000)
+        /// <param name="mutex"></param>
+        public static void EnsureSingleRunning(Mutex mutex)
         {
-            var mutex = new Mutex(true, ProductDescription.AppName);
-            var exitForUpdating = false;
-
-            try
+            if (!mutex.WaitOne(TimeSpan.Zero, true))
             {
-                EnsureSingleRunning(mutex);
-
-                InitDeployQueryString();
-                EnsureUserRights(userRights);
-
-                Info($"{ProductDescription.Product}\n版本号:{ProductDescription.Version}");
-
-                var callerType = new StackFrame(1).GetMethod().DeclaringType;
-                configKeyAndFieldNames.ForEach(configKeyAndFieldName =>
-                {
-                    var configField = callerType
-                     .GetField(configKeyAndFieldName.Value,
-                       BindingFlags.Public
-                       | BindingFlags.NonPublic
-                       | BindingFlags.Static
-                       | BindingFlags.Instance);
-                    var configValue = GetConfigFromDeployThenAppConfig(
-                            configKeyAndFieldName.Key,
-                            configField?.FieldType);
-                    configField?.SetValue(null, configValue);
-
-                    Info($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
-                });
-
-                tryBlock?.Invoke();
-
-                var updateWorker = new UpdateCheckingWorker(updateInterval);
-                updateWorker.Start();
-                updateWorker.WaitForExit();
-                exitForUpdating = true;
-                Info("找到更新,准备重启...");
-
-                Console.ReadLine();
-            }
-            catch (Exception ex)
-            {
-                InfoAndLog(ex);
-                Console.ReadLine();
-            }
-            finally
-            {
-                finallyBlock?.Invoke();
-
-                mutex.Close();
-
-                if (exitForUpdating)
-                {
-                    Application.Restart();
-                }
+                throw new Exception("已有此程序的另一个实例在运行");
             }
         }
 
@@ -207,50 +200,27 @@ namespace Infrastructure.Helpers
             }
         }
 
-        public static void EnsureSingleRunning(Mutex mutex)
+        public static object GetConfigFromDeployThenAppConfig(string key, Type type)
         {
-            if (!mutex.WaitOne(TimeSpan.Zero, true))
+            if (!ApplicationDeployment.IsNetworkDeployed)
             {
-                throw new Exception("已有此程序的另一个实例在运行");
+                return GetAppConfig(key, type);
+            }
+
+            try
+            {
+                return Convert.ChangeType(GetDeployQueryString(key), type);
+            }
+            catch (KeyNotFoundException)
+            {
+                return GetAppConfig(key, type);
             }
         }
 
-        public static void CheckUpdate(Action afterUpdated)
+        public static T GetConfigFromDeployThenAppConfig<T>(string key)
         {
-            UpdateCheckInfo info = null;
-
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                try
-                {
-                    ApplicationDeployment ad = ApplicationDeployment.CurrentDeployment;
-                    info = ad.CheckForDetailedUpdate();
-                    if (info.UpdateAvailable)
-                    {
-                        ad.Update();
-                        afterUpdated();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log(ex);
-                    throw new Exception($"升级到{info?.AvailableVersion?.ToString() ?? "最新版本"}时出错");
-                }
-            }
+            return ( T )GetConfigFromDeployThenAppConfig(key, typeof(T));
         }
-
-        /// <summary>
-        /// 通过网络部署时可以在安装链接后传递querystring(需要在项目属性中开启)
-        /// 如http://....../CDN.ConsoleApp.application?SyncApiParam=123123
-        /// 这样可以实现一次部署,不同配置
-        /// 但程序在本地再次打开时,将取不到这个参数,所以第一次安装后需要持久化
-        /// 尽可能早的调用InitDeployQueryString已持久化参数
-        /// 并在需要的时候用GetDeployQueryString获取
-        /// </summary>
-        /// <returns></returns>
-        private static IDictionary<string, string> _deployQuerys;
-
-        private static string _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys_" + ProductDescription.AppName);
 
         public static void InitDeployQueryString(params string[] requiredKeys)
         {
@@ -274,27 +244,69 @@ namespace Infrastructure.Helpers
             }
         }
 
-        public static object GetConfigFromDeployThenAppConfig(string key, Type type)
+        /// <summary>
+        /// 适用于控制台的后台服务框架
+        /// </summary>
+        /// <param name="configKeyAndFieldNames">需要初始化的配置项字段 key:配置项的key,例:"KeyOfUser",value:配置项的名称,例:nameof(_keyOfUser)</param>
+        /// <param name="tryBlock">核心代码</param>
+        /// <param name="finallyBlock">清理代码</param>
+        /// <param name="userRights">需要的权限</param>
+        /// <param name="updateInterval">升级检查时间,默认1小时</param>
+        public static void RunAsBackgroundService(Dictionary<string, string> configKeyAndFieldNames, Action tryBlock, Action finallyBlock = null, UserRights userRights = UserRights.NORMAL_USER, int updateInterval = 3600000)
         {
-            if (!ApplicationDeployment.IsNetworkDeployed)
-            {
-                return GetAppConfig(key, type);
-            }
+            var mutex = new Mutex(true, ProductDescription.AppName);
+            var exitForUpdating = false;
 
             try
             {
-                return Convert.ChangeType(GetDeployQueryString(key), type);
+                EnsureSingleRunning(mutex);
+
+                InitDeployQueryString();
+
+                EnsureUserRights(userRights);
+
+                Info($"{ProductDescription.Product}\n版本号:{ProductDescription.Version}");
+
+                InitConfigurations(configKeyAndFieldNames);
+
+                tryBlock?.Invoke();
+
+                var updateWorker = new UpdateCheckingWorker(updateInterval);
+                updateWorker.Start();
+                updateWorker.WaitForExit();
+                exitForUpdating = true;
+                Info("找到更新,准备重启...");
+
+                Console.ReadLine();
             }
-            catch (KeyNotFoundException)
+            catch (Exception ex)
             {
-                return GetAppConfig(key, type);
+                InfoAndLog(ex);
+                Console.ReadLine();
+            }
+            finally
+            {
+                finallyBlock?.Invoke();
+
+                mutex.Close();
+
+                if (exitForUpdating)
+                {
+                    Application.Restart();
+                }
             }
         }
 
-        public static T GetConfigFromDeployThenAppConfig<T>(string key)
+        public static bool RunningInAdmin()
         {
-            return ( T )GetConfigFromDeployThenAppConfig(key, typeof(T));
+            var wi = WindowsIdentity.GetCurrent();
+            var wp = new WindowsPrincipal(wi);
+            return wp.IsInRole(WindowsBuiltInRole.Administrator);
         }
+
+        #endregion Public Methods
+
+        #region Private Methods
 
         private static string GetDeployQueryString(string key)
         {
@@ -319,8 +331,41 @@ namespace Infrastructure.Helpers
             }
         }
 
+        /// <summary>
+        /// 根据传入的config key 获取config value,根据传入的字段名通过反射赋值
+        /// </summary>
+        /// <param name="configKeyAndFieldNames"></param>
+        private static void InitConfigurations(Dictionary<string, string> configKeyAndFieldNames)
+        {
+            //获取调用者的类型
+            //使用StackFrame是一个危险的行为,这里(2)表示调用堆栈向上两层,找到外部调用者
+            //第1层InitConfigurations 第2层RunAsBackgroundService
+            //此处重构代码很有可能影响调用的层数!
+            var callerType = new StackFrame(2).GetMethod().DeclaringType;
+            configKeyAndFieldNames.ForEach(configKeyAndFieldName =>
+            {
+                var configField = callerType
+                  .GetField(configKeyAndFieldName.Value,
+                   BindingFlags.Public
+                   | BindingFlags.NonPublic
+                   | BindingFlags.Static);//获取调用者的字段,必须是static
+                var configValue = GetConfigFromDeployThenAppConfig(
+                        configKeyAndFieldName.Key,
+                        configField?.FieldType);
+                configField?.SetValue(null, configValue);
+
+                Info($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
+            });
+        }
+
+        #endregion Private Methods
+
+        #region Private Classes
+
         private class ProductDescription
         {
+            #region Public Constructors
+
             static ProductDescription()
             {
                 AppName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
@@ -340,10 +385,18 @@ namespace Infrastructure.Helpers
                 }
             }
 
+            #endregion Public Constructors
+
+            #region Public Properties
+
+            public static string AppName { get; set; } = "";
             public static string Product { get; set; } = "";
             public static string Publisher { get; set; } = "";
-            public static string AppName { get; set; } = "";
             public static string Version { get; set; } = "";
+
+            #endregion Public Properties
         }
+
+        #endregion Private Classes
     }
 }
