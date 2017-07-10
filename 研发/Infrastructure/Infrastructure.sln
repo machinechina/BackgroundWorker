@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskQueue.Tests", "DiskQueu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataStructure", "DataStructure", "{98981101-333D-4B53-9836-C3FC6789C15C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstallGuildGen", "InstallGuildGen\InstallGuildGen.csproj", "{4B28A129-BF01-4DD7-8565-526E5521F9E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstallGuideGen", "InstallGuideGen\InstallGuideGen.csproj", "{4B28A129-BF01-4DD7-8565-526E5521F9E2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tool", "Tool", "{70763C6A-1D15-487A-B563-66CFE25E8566}"
 EndProject

@@ -18,6 +18,7 @@ namespace Infrastructure.UnitTest
 
         public static void Main(string[] args)
         {
+            Debug.WriteLine("Testing...");
             Console.ReadLine();
         }
 
