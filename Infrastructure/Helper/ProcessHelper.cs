@@ -9,8 +9,32 @@ namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
-        public static void RunProcess(string fileName, string args, string output = "", string error = "")
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="args"></param>
+        /// <returns>Process output</returns>
+        public static string RunProcess(string fileName, string args = "")
         {
+            return RunProcess(fileName, args, true).ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="args"></param>
+        /// <returns>Process Id</returns>
+        public static int RunProcessAsync(string fileName, string args = "")
+        {
+            return ( int )RunProcess(fileName, args, false);
+        }
+
+        private static object RunProcess(string fileName, string args = "", bool waitForExit = false)
+        {
+            var output = "";
+            var error = "";
             using (var proc = new Process
             {
                 StartInfo =
@@ -19,25 +43,38 @@ namespace Infrastructure.Helpers
                                 Arguments =args,
                                 UseShellExecute = false,
                                 CreateNoWindow = true,
-                                RedirectStandardOutput=true,
-                                RedirectStandardError=true
+                                RedirectStandardOutput=waitForExit,
+                                RedirectStandardError=waitForExit
                             }
             })
             {
-                proc.OutputDataReceived += (sender, e) =>
-                output += e.Data;
-                proc.ErrorDataReceived += (sender, e) =>
-                error += e.Data;
-                proc.Start();
-
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-                proc.WaitForExit();
-                if (!proc.ExitCode.Equals(0))
+                if (waitForExit)
                 {
-                    throw new Exception($"执行进程错误,错误码:{proc.ExitCode}\n进程名称:{fileName}\n参数:{args}\n支持输出:{output}\n错误输出:{error}");
+                    proc.OutputDataReceived += (sender, e) =>
+               output += e.Data;
+                    proc.ErrorDataReceived += (sender, e) =>
+                    error += e.Data;
                 }
+
+                if (!proc.Start())
+                    throw new InvalidOperationException($"启动进程错误:{proc}");
+
+                if (waitForExit)
+                {
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
+                    proc.WaitForExit();
+                    if (!proc.ExitCode.Equals(0))
+                    {
+                        throw new Exception($"执行进程错误,错误码:{proc.ExitCode}\n进程:{fileName}\n参数:{args}\n输出:{output}\n错误:{error}");
+                    }
+                    return output;
+                }
+
+                return proc.Id;
             }
         }
+
+
     }
 }

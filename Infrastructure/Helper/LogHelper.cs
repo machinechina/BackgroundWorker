@@ -36,11 +36,7 @@ namespace Infrastructure.Helpers
             {
                 lock (logLocker)
                 {
-                    var logDir = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\Logs.{ProductDescription.AppName}";
-                    //"If the directory already exists, this method does not create a new directory, but it returns a DirectoryInfo object for the existing directory." 
-                    Directory.CreateDirectory(logDir);
-
-                    sw = File.AppendText($"{logDir}\\{DateTime.Now.ToString("yyyyMMdd")}.log");
+                    sw = File.AppendText($"{_localLogPath}\\{DateTime.Now.ToString("yyyyMMdd")}.log");
                     sw.WriteLine(DateTime.Now.ToString() + "---" + msg + "\n\n\n");
                 }
             }

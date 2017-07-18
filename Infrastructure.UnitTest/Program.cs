@@ -8,21 +8,41 @@ using System.Threading;
 using System.Threading.Tasks;
 using DiskQueue;
 using Infrastructure.Extension;
+using Infrastructure.Extensions;
 using Infrastructure.Helpers;
+using Infrastructure.Web;
 
 namespace Infrastructure.UnitTest
 {
- 
+    public class A : IApiResult
+    {
+        public string ErrorCode => a;
+
+        public string Message => a + "m";
+
+        public string a { get; set; }
+    }
+
+    public static class B
+    {
+        public static bool b { get; private set; }
+        static B()
+        {
+            b = true;
+        }
+    }
+
     public class Program
     {
 
         public static void Main(string[] args)
         {
-            Debug.WriteLine("Testing...");
+            var a = "{a:123}".JsonToObject<A>();
+            Console.WriteLine(Helper.JustUpdated);
             Console.ReadLine();
         }
 
-     
+
 
         private static void ConcurrentEnqueDequeue(string[] args)
         {
