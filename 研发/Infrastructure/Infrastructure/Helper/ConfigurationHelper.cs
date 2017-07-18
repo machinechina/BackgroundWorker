@@ -1,25 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using Infrastructure.Extension;
+using static System.AppDomain;
 
 namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
-        public static T GetAppConfig<T>(string key)
+        public static T GetAppConfig<T>(string key, string configName = null)
         {
-            return ( T )GetAppConfig(key, typeof(T));
+            return ( T )GetAppConfig(key, typeof(T), configName);
         }
 
-        public static object GetAppConfig(string key, Type type)
+        public static object GetAppConfig(string key, Type type, string configName = null)
         {
             try
             {
-                var value = GetAppConfig(key);
+                var value = GetAppConfig(key, configName);
                 if (type.IsEquivalentTo(typeof(Guid)))
                 {
                     return Convert.ChangeType(new Guid(value), type);
@@ -31,41 +29,43 @@ namespace Infrastructure.Helpers
             }
             catch (Exception)
             {
-
             }
             return default(object);
         }
 
-        private static string GetAppConfig(string key, string configPath = "Config")
+        public static void SetAppConfig(string key, string value, string configName = null)
         {
-            var config = System.Configuration.ConfigurationManager.AppSettings[key];
-            try
-            {
-                if (string.IsNullOrWhiteSpace(config))
-                {
-                    string filePath = Path.Combine(System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase, configPath);
-                    if (File.Exists(filePath))
+            var config = configName != null ?
+                ConfigurationManager.OpenMappedExeConfiguration(
+                    new ExeConfigurationFileMap
                     {
-                        using (TextReader reader = new StreamReader(filePath))
-                        {
-                            XElement xml = XElement.Load(filePath);
-                            if (xml != null)
-                            {
-                                var element = xml.Elements().SingleOrDefault(e => e.Attribute("key") != null && e.Attribute("key").Value.Equals(key));
-                                if (element != null)
-                                {
-                                    config = element.Attribute("value").Value;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (System.Exception)
-            {
-                config = string.Empty;
-            }
-            return config;
+                        ExeConfigFilename = CurrentDomain.SetupInformation.ApplicationBase
+                    .PathCombine(configName)
+                    }, ConfigurationUserLevel.None) :
+                ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+            if (config.AppSettings.Settings.AllKeys.Contains(key))
+                config.AppSettings.Settings[key].Value = value;
+            else
+                config.AppSettings.Settings.Add(key, value);
+
+            config.Save(ConfigurationSaveMode.Minimal);
+
+            if (configName == null)
+                ConfigurationManager.RefreshSection(config.AppSettings.SectionInformation.Name);
+        }
+
+        private static string GetAppConfig(string key, string configName = null)
+        {
+            return configName != null ?
+               ConfigurationManager.OpenMappedExeConfiguration(
+                    new ExeConfigurationFileMap
+                    {
+                        ExeConfigFilename = CurrentDomain.SetupInformation.ApplicationBase
+                    .PathCombine(configName)
+                    }, ConfigurationUserLevel.None)
+                    .AppSettings.Settings[key].Value :
+                ConfigurationManager.AppSettings[key];
         }
     }
 }

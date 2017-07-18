@@ -1,115 +1,86 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Net;
-//using System.Net.Http;
-//using System.Text;
-//using System.Threading.Tasks;
-//using Infrastructure.Extensions;
-//using Infrastructure.Web;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading;
+using Infrastructure.Extensions;
+using Infrastructure.Web;
 
-//namespace Infrastructure.Helpers
-//{
-//    public class WebHelper
-//    {
-//        HttpClient http { get; set; }
+namespace Infrastructure.Helpers
+{
+    /// <summary>
+    /// Web帮助类
+    /// 目前httpclient是静态对象实现,参考下面的文章
+    /// https://aspnetmonsters.com/2016/08/2016-08-27-httpclientwrong/
+    /// 1 Make your HttpClient static.
+    /// 2 Do not dispose of or wrap your HttpClient in a using unless you explicitly are looking for a particular behaviour
+    /// (such as causing your services to fail).
+    /// </summary>
+    public partial class Helper
+    {
+        private static HttpClient _client = new HttpClient
+        {
+            Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite)
+        };
 
-//        public HttpUtility(string host, Dictionary<string, string> headers = null, int timeout = 3600)
-//        {
-//            var handler = new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip };
-//            http = new HttpClient(handler);
-//            http.Timeout = new TimeSpan(0, 0, timeout);
-//            http.BaseAddress = new Uri(host);
-//            if (headers != null)
-//            {
-//                headers.ToList().ForEach(h => http.DefaultRequestHeaders.Add(h.Key, h.Value));
-//            }
-//        }
+        public static void SetBaseAddress(string address)
+        {
+            _client.BaseAddress = new Uri(address);
+        }
 
-//        public T Get<T>(string url)
-//        {
-//            var response = http.GetAsync(url).Result;
-//            response.EnsureSuccessStatusCode();
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TApi"></typeparam>
+        /// <param name="url"></param>
+        /// <param name="args"></param>
+        /// <param name="content"></param>
+        public static void Post<TApi>(string url, Dictionary<string, string> args = null, HttpContent content = null)
+            where TApi : IApiResult
+        {
+            try
+            {
+                args = args ?? new Dictionary<string, string>();
+                content = content ?? new FormUrlEncodedContent(args);
+                var result = _client.PostAsync(url, content).Result;
+                result.EnsureSuccessStatusCode();
+                var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
 
-//            var resultTask = response.Content.ReadAsStringAsync().Result;
-//            var result = resultTask.JsonToObject<ApiResult<T>>();
-//            if (result.ErrorCode != ErrorCode.NoError)
-//                throw new Exception(result.Message);
-//            return result.Result;
-//        }
+                if (data.ErrorCode != "0")
+                    throw new Exception(data.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"HTTP POST 错误\n{url}", ex);
+            }
+        }
 
-//        public Task<T> GetAsync<T>(string url)
-//        {
-//            return http.GetAsync(url).ContinueWith(task =>
-//            {
-//                var response = task.Result;
-//                response.EnsureSuccessStatusCode();
-//                return response.Content.ReadAsStringAsync().ContinueWith(task2 =>
-//                {
-//                    var resultTask = task2.Result;
-//                    var result = resultTask.JsonToObject<ApiResult<T>>();
-//                    if (result.ErrorCode != ErrorCode.NoError)
-//                        throw new Exception(result.Message);
-//                    return result.Result;
-//                });
-//            }).Unwrap();
-//        }
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TApi"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public static TResult Get<TApi, TResult>(string url)
+            where TApi : IApiResult<TResult>
+        {
+            try
+            {
+                var result = _client.GetAsync(url).Result;
+                result.EnsureSuccessStatusCode();
+                var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
 
-//        public T Post<T>(string url, Dictionary<string, string> args = null, HttpContent content = null)
-//        {
-//            if (args == null)
-//            {
-//                args = new Dictionary<string, string>();
-//            }
-//            if (content == null)
-//                content = new FormUrlEncodedContent(args);
-//            var response = http.PostAsync(url, content).Result;
-//            response.EnsureSuccessStatusCode();
+                if (data.ErrorCode != "0")
+                    throw new Exception(data.Message);
 
-//            var resultTask = response.Content.ReadAsStringAsync().Result;
-//            var result = resultTask.JsonToObject<ApiResult<T>>();
-//            if (result.ErrorCode != ErrorCode.NoError)
-//                throw new SysException(result.ErrorCode, result.Message);
-//            return result.Result;
-//        }
-
-//        public void Post(string url, Dictionary<string, string> args, HttpContent content = null)
-//        {
-//            if (args == null)
-//            {
-//                args = new Dictionary<string, string>();
-//            }
-//            if (content == null)
-//                content = new FormUrlEncodedContent(args);
-//            var response = http.PostAsync(url, content).Result;
-//            response.EnsureSuccessStatusCode();
-
-//            var resultTask = response.Content.ReadAsStringAsync().Result;
-//            var result = resultTask.JsonToObject<ApiResult>();
-//            if (result.ErrorCode != ErrorCode.NoError)
-//                throw new SysException(result.ErrorCode, result.Message);
-//        }
-
+                return data.Result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"HTTP GET 错误\n{url}", ex);
+            }
+        }
  
-//        public Task<T> PostAsync<T>(string url, Dictionary<string, string> args, HttpContent content = null)
-//        {
-//            if (content == null)
-//                content = new FormUrlEncodedContent(args);
+    }
 
-//            return http.PostAsync(url, content).ContinueWith(task =>
-//            {
-//                var response = task.Result;
-//                response.EnsureSuccessStatusCode();
-//                return response.Content.ReadAsStringAsync().ContinueWith(task2 =>
-//                {
-//                    var resultTask = task2.Result;
-//                    var result = resultTask.JsonToObject<ApiResult<T>>();
-//                    if (result.ErrorCode != ErrorCode.NoError)
-//                        throw new SysException(result.ErrorCode, result.Message);
-//                    return result.Result;
-//                });
-//            }).Unwrap();
-//        }
-
-//    }
-//}
+}

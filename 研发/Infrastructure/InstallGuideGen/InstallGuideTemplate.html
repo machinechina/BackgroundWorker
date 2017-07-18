@@ -6,7 +6,7 @@
     <title>@@Title安装向导</title>
     <style>
         input {
-            width: 90% !important;
+            width: 100% !important;
         }
 
         body, div, p, a.li, ul, dt, dd, dt, h1, h2, h3, h4, h5, h6 {
@@ -35,26 +35,41 @@
             border: #EAEAEC 1px solid;
             height: 35px;
             line-height: 35px;
-            text-align: center;
         }
 
         .tdleft {
-            width: 100px;
+            width: 200px;
             padding: 5px;
             color: Gray;
             text-align: right;
         }
 
-        .SaveBtn {
-            background: #5CADEC;
+        .customValue.changed {
+            border-color: palevioletred;
+        }
+
+        .SaveBtn, .LinkBtn {
             padding: 2px 5px 2px 5px;
             color: #fff;
             font-size: 14px;
             margin: 0px 5px 0px 5px;
+            text-decoration: none;
+        }
+
+        .SaveBtn {
+            background: #818fed;
         }
 
             .SaveBtn:hover {
-                background: #F4984D;
+                background: #3f56ee;
+            }
+
+        .LinkBtn {
+            background: #f8bd9e;
+        }
+
+            .LinkBtn:hover {
+                background: #fb8243;
             }
     </style>
 
@@ -69,8 +84,8 @@
         @@Rows
         <tr class="tr">
             <td class="tdleft">
-                <a id="submit" class="LinkBtn SaveBtn" style="cursor:pointer;">生成链接</a>
-                <a id="copy" class="LinkBtn LinkBtn" style="cursor:pointer;" onclick="$('#output_address').select();document.execCommand('copy')">复制链接</a>
+                <a id="submit" class="LinkBtn" style="cursor:pointer;">生成链接</a>
+                <a id="copy" class="SaveBtn" style="cursor:pointer;" onclick="$('#output_address').select();document.execCommand('copy')">复制链接</a>
             </td>
             <td class="tdright">
                 <input type="text" id="output_address" />
@@ -101,13 +116,15 @@
 </html>
 <script type="text/javascript">
     $(function () {
+        $('.customValue').change(e => $(e.target).addClass('changed'))
     });
 
     $('#submit').click(function () {
+        var changedInput = $('input.customValue.changed')
         var url = window.location.href.toLowerCase() + '@@AppName.application?'
-        $('input.customValue').filter(function (index) {
+        changedInput.filter(function (index) {
             url += $(this).attr('id') + "=" + encodeURIComponent($(this).val())
-            if (index != $('input.customValue').length - 1) {
+            if (index != changedInput.length - 1) {
                 url += "&"
             }
         })

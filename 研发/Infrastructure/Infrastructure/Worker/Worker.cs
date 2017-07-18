@@ -53,10 +53,10 @@ namespace Infrastructure.Workers
                 .ContinueWith(t =>
                 {
                     IsRunning = false;
-                    Helper.Log($"Worker {_mainTask.Id} Stopped.");
+                    Helper.Log($"<{this.GetType().Name}> {_mainTask.Id} Stopped.");
                 });
 
-            Helper.Log($"Worker {_mainTask.Id} Started.");
+            Helper.Log($"<{this.GetType().Name}> {_mainTask.Id} Started.");
         }
 
         /// <summary>
@@ -79,16 +79,8 @@ namespace Infrastructure.Workers
         public void WaitForExit()
         {
             if (!IsRunning) return;
-
+            
             _mainTaskContinueWithTask?.Wait();
-        }
-
-        protected bool IsCancellationRequested
-        {
-            get
-            {
-                return _mainTaskCancellationToken.IsCancellationRequested;
-            }
         }
 
         public bool IsRunning

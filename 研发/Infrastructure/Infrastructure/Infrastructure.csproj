@@ -60,12 +60,16 @@
   <ItemGroup>
     <Compile Include="Extension\CollectionExtension.cs" />
     <Compile Include="Extension\DateTimeExtension.cs" />
+    <Compile Include="Extension\FileExtension.cs" />
     <Compile Include="Extension\StringExtension.cs" />
     <Compile Include="Helper\ConfigurationHelper.cs" />
     <Compile Include="Extension\ConvertExtension.cs" />
     <Compile Include="Helper\ApplicationHelper.cs" />
+    <Compile Include="Helper\FileHelper.cs" />
     <Compile Include="Helper\LogHelper.cs" />
+    <Compile Include="Helper\MetaData.cs" />
     <Compile Include="Helper\ProcessHelper.cs" />
+    <Compile Include="Helper\ProductDescription.cs" />
     <Compile Include="Helper\WebHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Threading\IntervalTask.cs" />
@@ -77,6 +81,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Worker\IWorker.cs" />
+    <Compile Include="Worker\LongPollingWorker.cs" />
     <Compile Include="Worker\ShortRunningWorker.cs" />
     <Compile Include="Worker\UpdateCheckingWorker.cs" />
     <Compile Include="Worker\Worker.cs" />

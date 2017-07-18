@@ -9,8 +9,6 @@ using System.Security.Principal;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Linq;
 using Infrastructure.Extension;
 using Infrastructure.Extensions;
 using Infrastructure.Workers;
@@ -19,6 +17,7 @@ namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
+
         #region Private Fields
 
         /// <summary>
@@ -32,23 +31,74 @@ namespace Infrastructure.Helpers
         /// <returns></returns>
         private static IDictionary<string, string> _deployQuerys;
 
-        private static string _localStorePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "_deployQuerys_" + ProductDescription.AppName);
-
         #endregion Private Fields
+
+        #region Public Constructors
+
+        static Helper()
+        {
+            //"If the directory already exists, this method does not create a new directory, but it returns a DirectoryInfo object for the existing directory."
+            Directory.CreateDirectory(_localLogPath);
+
+
+        }
+
+        #endregion Public Constructors
 
         #region Public Enums
 
         /// <summary>
-        /// 程序运行角色
+        ///
         /// </summary>
         public enum UserRights
         {
+            /// <summary>
+            ///
+            /// </summary>
             NORMAL_USER,
+
+            /// <summary>
+            ///
+            /// </summary>
             BUILTIN_ADMIN,
+
+            /// <summary>
+            ///
+            /// </summary>
             RUN_AS_ADMIN
         }
 
         #endregion Public Enums
+
+        #region Public Properties
+
+        /// <summary>
+        /// First time running after update
+        /// It's 3-state boolean 
+        /// because once called,old version will be set equal to new version 
+        /// It cannot be init in static ctor 
+        /// because sometimes app will restart to grant admin authorize
+        /// </summary>
+        public static bool JustUpdated
+        {
+            get
+            {
+                if (_justUpdated.HasValue)
+                {
+                    return _justUpdated.Value;
+                }
+                else if (ApplicationDeployment.IsNetworkDeployed)
+                {
+                    _justUpdated = ReadFile(_localVersionPath) != ProductDescription.Version;
+                    File.WriteAllText(_localVersionPath, ProductDescription.Version);
+                    return _justUpdated.Value;
+                }
+                return false;
+            }
+        }
+        private static bool? _justUpdated;
+
+        #endregion Public Properties
 
         #region Public Methods
 
@@ -58,15 +108,16 @@ namespace Infrastructure.Helpers
         /// <param name="afterUpdated"></param>
         public static void CheckUpdate(Action afterUpdated)
         {
-            UpdateCheckInfo info = null;
+            UpdateCheckInfo updateInfo = null;
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
                 try
                 {
                     ApplicationDeployment ad = ApplicationDeployment.CurrentDeployment;
-                    info = ad.CheckForDetailedUpdate();
-                    if (info.UpdateAvailable)
+                    updateInfo = ad.CheckForDetailedUpdate();
+
+                    if (updateInfo.UpdateAvailable)
                     {
                         ad.Update();
                         afterUpdated();
@@ -75,7 +126,7 @@ namespace Infrastructure.Helpers
                 catch (Exception ex)
                 {
                     Log(ex);
-                    throw new Exception($"升级到{info?.AvailableVersion?.ToString() ?? "最新版本"}时出错");
+                    throw new Exception($"升级到{updateInfo?.AvailableVersion?.ToString() ?? "最新版本"}时出错");
                 }
             }
         }
@@ -265,7 +316,7 @@ namespace Infrastructure.Helpers
 
                 EnsureUserRights(userRights);
 
-                Info($"{ProductDescription.Product}\n版本号:{ProductDescription.Version}");
+                InfoAndLog(ApplicationDeployment.IsNetworkDeployed ? $"{ProductDescription.Product} {ProductDescription.Version}" : ProductDescription.AppName);
 
                 InitConfigurations(configKeyAndFieldNames);
 
@@ -275,14 +326,12 @@ namespace Infrastructure.Helpers
                 updateWorker.Start();
                 updateWorker.WaitForExit();
                 exitForUpdating = true;
-                Info("找到更新,准备重启...");
-
-                Console.ReadLine();
+                InfoAndLog("找到更新,准备重启...\n");
             }
             catch (Exception ex)
             {
                 InfoAndLog(ex);
-                Console.ReadLine();
+                Thread.Sleep(5000);
             }
             finally
             {
@@ -354,49 +403,11 @@ namespace Infrastructure.Helpers
                         configField?.FieldType);
                 configField?.SetValue(null, configValue);
 
-                Info($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
+                InfoAndLog($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
             });
         }
 
         #endregion Private Methods
 
-        #region Private Classes
-
-        private class ProductDescription
-        {
-            #region Public Constructors
-
-            static ProductDescription()
-            {
-                AppName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
-
-                if (ApplicationDeployment.IsNetworkDeployed)
-                {
-                    Version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-                    using (MemoryStream memoryStream = new MemoryStream(AppDomain.CurrentDomain.ActivationContext.DeploymentManifestBytes))
-                    using (XmlTextReader xmlTextReader = new XmlTextReader(memoryStream))
-                    {
-                        var xDocument = XDocument.Load(xmlTextReader);
-                        var description = xDocument.Root.Elements().Where(e => e.Name.LocalName == "description").First();
-
-                        Product = description.Attributes().Where(a => a.Name.LocalName == "product").First().Value;
-                        Publisher = description.Attributes().Where(a => a.Name.LocalName == "publisher").First().Value;
-                    }
-                }
-            }
-
-            #endregion Public Constructors
-
-            #region Public Properties
-
-            public static string AppName { get; set; } = "";
-            public static string Product { get; set; } = "";
-            public static string Publisher { get; set; } = "";
-            public static string Version { get; set; } = "";
-
-            #endregion Public Properties
-        }
-
-        #endregion Private Classes
     }
 }

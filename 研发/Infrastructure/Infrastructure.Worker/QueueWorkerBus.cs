@@ -64,7 +64,7 @@ namespace Infrastructure.QueueWorker
         /// </summary>
         public static void StopAllDequeuers()
         {
-            _watchWorker.Stop();//确保不会再次被唤醒
+            _watchWorker?.Stop();//确保不会再次被唤醒
             Parallel.ForEach(_workers.Values.SelectMany(_ => _), w => w.Stop());
         }
 
