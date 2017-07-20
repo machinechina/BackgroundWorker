@@ -337,6 +337,8 @@ namespace Infrastructure.Helpers
             {
                 finallyBlock?.Invoke();
 
+                WorkerFactory.StopAll();
+
                 mutex.Close();
 
                 if (exitForUpdating)
