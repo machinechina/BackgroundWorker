@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using Infrastructure.Extensions;
 using Infrastructure.Web;
@@ -25,6 +27,9 @@ namespace Infrastructure.Helpers
         public static void SetBaseAddress(string address)
         {
             _client.BaseAddress = new Uri(address);
+            _client.DefaultRequestHeaders
+             .Accept
+             .Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
         }
 
         /// <summary>
@@ -32,16 +37,35 @@ namespace Infrastructure.Helpers
         /// </summary>
         /// <typeparam name="TApi"></typeparam>
         /// <param name="url"></param>
-        /// <param name="args"></param>
+        /// <param name="formData"></param>
         /// <param name="content"></param>
-        public static void Post<TApi>(string url, Dictionary<string, string> args = null, HttpContent content = null)
+        public static void Post<TApi>(string url, Dictionary<string, string> formData = null)
             where TApi : IApiResult
         {
             try
             {
-                args = args ?? new Dictionary<string, string>();
-                content = content ?? new FormUrlEncodedContent(args);
-                var result = _client.PostAsync(url, content).Result;
+                formData = formData ?? new Dictionary<string, string>();
+                var result = _client.PostAsync(url,
+                    new FormUrlEncodedContent(formData)).Result;
+                result.EnsureSuccessStatusCode();
+                var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
+
+                if (data.ErrorCode != "0")
+                    throw new Exception(data.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"HTTP POST 错误\n{url}", ex);
+            }
+        }
+
+        public static void Post<TApi>(string url,string jsonData)
+            where TApi : IApiResult
+        {
+            try
+            {
+                HttpContent httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                var result = _client.PostAsync(url, httpContent).Result;
                 result.EnsureSuccessStatusCode();
                 var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
 
@@ -80,7 +104,7 @@ namespace Infrastructure.Helpers
                 throw new Exception($"HTTP GET 错误\n{url}", ex);
             }
         }
- 
+
     }
 
 }

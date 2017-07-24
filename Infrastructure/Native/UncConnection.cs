@@ -44,7 +44,25 @@ namespace Infrastructure.Native
 
             if (result != 0)
             {
-                throw new Win32Exception(result, "Error connecting to remote share");
+                string strErrMsg = "";
+                if (result == 53)
+                {
+                    strErrMsg = "未找到网络路径.(网络路径不能以'/'结尾)";
+                }
+                else if (result == 67)
+                {
+                    strErrMsg = "未找到网络名称";
+                }
+                if (result == 86)
+                {
+                    strErrMsg = "错误的用户名或密码";
+                }
+                else if (result == 1219)
+                {
+                    strErrMsg = "无法使用同一账户对服务器或共享目录进行多重连接.(确保[应用程序池-进程模型-标识]使用了正确的账户";
+                }
+
+                throw new Win32Exception(result, "Error connecting to " + networkName + " remote share.Error Code:" + result.ToString() + "." + strErrMsg);
             }
         }
 
