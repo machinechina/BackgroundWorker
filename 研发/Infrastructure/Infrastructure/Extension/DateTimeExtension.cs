@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Infrastructure.Extension
+namespace Infrastructure.Extensions
 {
     public static partial class Extension
     {

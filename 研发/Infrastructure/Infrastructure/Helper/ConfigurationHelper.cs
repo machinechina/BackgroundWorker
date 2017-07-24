@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Linq;
-using Infrastructure.Extension;
+using Infrastructure.Extensions;
 using static System.AppDomain;
 
 namespace Infrastructure.Helpers

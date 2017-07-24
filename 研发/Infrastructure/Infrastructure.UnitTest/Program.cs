@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DiskQueue;
-using Infrastructure.Extension;
 using Infrastructure.Extensions;
 using Infrastructure.Helpers;
+using Infrastructure.Native;
 using Infrastructure.Web;
 
 namespace Infrastructure.UnitTest
@@ -37,8 +37,12 @@ namespace Infrastructure.UnitTest
 
         public static void Main(string[] args)
         {
-            var a = "{a:123}".JsonToObject<A>();
-            Console.WriteLine(Helper.JustUpdated);
+            DeviceChangeNotifier.DeviceNotify += 
+                msg => {
+                    Helper.Info(msg.ToString());
+            };
+            DeviceChangeNotifier.Start();
+
             Console.ReadLine();
         }
 

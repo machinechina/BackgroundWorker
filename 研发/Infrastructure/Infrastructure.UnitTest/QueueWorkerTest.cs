@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DiskQueue;
-using Infrastructure.Extension;
+using Infrastructure.Extensions;
 using Infrastructure.QueueWorker;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

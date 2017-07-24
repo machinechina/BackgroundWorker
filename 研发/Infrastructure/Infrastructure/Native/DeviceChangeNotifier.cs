@@ -4,7 +4,6 @@ using System.Windows.Forms;
 
 namespace Infrastructure.Native
 {
-    
     public class DeviceChangeNotifier : Form
     {
         public delegate void DeviceNotifyDelegate(Message msg);

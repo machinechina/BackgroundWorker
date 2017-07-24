@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Infrastructure.Helpers;
@@ -24,39 +21,47 @@ namespace Infrastructure.Threading
                 () =>
                 {
                     var continuousIdleLoopCount = 0;
+
                     for (;;)
                     {
-                        if (token.WaitCancellationRequested(pollInterval))
-                            break;
+                        var workingState = WorkingState.IDLE;
                         try
                         {
-                            var workResult = func();
-                            if (stopAfterContinuousIdleLoopCount <= 0)
-                            {
-                                //不需要终止
-                                continue;
-                            }
-                            if (workResult == WorkingState.IDLE)
-                            {
-                                //空转计数器累加
-                                continuousIdleLoopCount++;
-                                if (continuousIdleLoopCount >= stopAfterContinuousIdleLoopCount)
-                                {
-                                    //空转一定周期后,结束任务
-                                    break;
-                                }
-                            }
-                            else if (workResult == WorkingState.BUSY)
-                            {
-                                //如果有工作了,空转计数器清零
-                                continuousIdleLoopCount = 0;
-                            }
-
+                            workingState = func();
                         }
                         catch (Exception ex)
                         {
                             Helper.Log(ex);
                         }
+
+                        //等待一个周期,接收终止命令
+                        if (token.WaitCancellationRequested(pollInterval))
+                            break;
+
+                        #region 结算空转计数
+
+                        if (stopAfterContinuousIdleLoopCount <= 0)
+                        {
+                            //不需要终止
+                            continue;
+                        }
+                        if (workingState == WorkingState.IDLE)
+                        {
+                            //空转计数器累加
+                            continuousIdleLoopCount++;
+                            if (continuousIdleLoopCount >= stopAfterContinuousIdleLoopCount)
+                            {
+                                //空转一定周期后,结束任务
+                                break;
+                            }
+                        }
+                        else if (workingState == WorkingState.BUSY)
+                        {
+                            //如果有工作了,空转计数器清零
+                            continuousIdleLoopCount = 0;
+                        }
+
+                        #endregion 结算空转计数
                     }
                 }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
