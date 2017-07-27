@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Infrastructure.Extensions
@@ -95,6 +96,16 @@ namespace Infrastructure.Extensions
                     updateFunc(@this[key]);
                 }
             }
+        }
+
+        public static bool IncludeIn<T>(this T @this, params T[] values)
+        {
+            return values.Contains(@this);
+        }
+
+        public static bool NotIncludeIn<T>(this T @this, params T[] values)
+        {
+            return !values.Contains(@this);
         }
     }
 }

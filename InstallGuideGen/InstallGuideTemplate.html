@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width" />
     <title>@@Title安装向导</title>
     <style>
-        input {
+        input,select {
             width: 100% !important;
+            height: inherit;
         }
 
         body, div, p, a.li, ul, dt, dd, dt, h1, h2, h3, h4, h5, h6 {
@@ -120,7 +121,7 @@
     });
 
     $('#submit').click(function () {
-        var changedInput = $('input.customValue.changed')
+        var changedInput = $('.customValue.changed')
         var url = window.location.href.toLowerCase() + '@@AppName.application?'
         changedInput.filter(function (index) {
             url += $(this).attr('id') + "=" + encodeURIComponent($(this).val())

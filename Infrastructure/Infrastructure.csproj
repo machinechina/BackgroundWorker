@@ -70,6 +70,7 @@
     <Compile Include="Helper\MetaData.cs" />
     <Compile Include="Helper\ProcessHelper.cs" />
     <Compile Include="Helper\ProductDescription.cs" />
+    <Compile Include="Helper\StringHelper.cs" />
     <Compile Include="Helper\WebHelper.cs" />
     <Compile Include="Native\DeviceChangeNotifier.cs">
       <SubType>Form</SubType>
