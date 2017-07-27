@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using Infrastructure.Extensions;
 using Infrastructure.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -54,7 +57,18 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void RunProcessTest()
         {
-            Assert.IsNotNull(Helper.RunProcess("ipconfig"));
+            //Sync
+            var resultOfPing1 = Helper.RunProcess("ping", "127.0.0.1");
+            Assert.AreEqual(13, resultOfPing1.Lines());
+
+            //Async
+            StringBuilder resultOfPing2 = new StringBuilder();
+            var p = Helper.RunProcessAsync("ping", "127.0.0.1",
+            outputEvent: (o, e) =>
+                resultOfPing2.AppendLine(e.Data ?? "")
+            );
+            Thread.Sleep(5000);
+            Assert.AreEqual(13, resultOfPing2.ToString().Lines());
         }
 
         [TestMethod]
@@ -101,6 +115,12 @@ namespace Infrastructure.UnitTest
                 Assert.AreEqual("abc",
                    Helper.GetAppConfig<string>("TestString", "app2.config"));
             }
+        }
+
+        [TestMethod]
+        public void RandomStringAlphanumeric()
+        {
+            var str1 = Helper.RandomString(10);
         }
     }
 }

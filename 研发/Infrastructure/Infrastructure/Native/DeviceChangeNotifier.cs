@@ -22,7 +22,8 @@ namespace Infrastructure.Native
 
         public static void Stop()
         {
-            if (mInstance == null) throw new InvalidOperationException("Notifier not started");
+            if (mInstance == null)
+                return;//Notifier not started
             DeviceNotify = null;
             mInstance.Invoke(new MethodInvoker(mInstance.endForm));
         }

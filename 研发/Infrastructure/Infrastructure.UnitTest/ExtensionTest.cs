@@ -93,5 +93,29 @@ namespace Infrastructure.UnitTest
             Assert.AreEqual("a", dic6[1][0]);
 
         }
+
+        [TestMethod]
+        public void Contains()
+        {
+            Assert.IsTrue("AA".Contains("A", false));
+            Assert.IsFalse("AA".Contains("a", false));
+            Assert.IsTrue("AA".Contains("a", true));
+
+        }
+
+        [TestMethod]
+        public void Lines()
+        {
+            string nullString = null;
+            Assert.AreEqual(nullString.Lines(), 0);
+            Assert.AreEqual(string.Empty.Lines(), 1);
+            Assert.AreEqual("".Lines(), 1);
+            Assert.AreEqual("AA".Lines(), 1);
+            Assert.AreEqual("AA\n".Lines(), 2);
+            Assert.AreEqual("AA\nBB".Lines(), 2);
+            Assert.AreEqual("AA\nBB\nCC".Lines(), 3);
+
+
+        }
     }
 }
