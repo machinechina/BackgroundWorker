@@ -42,40 +42,24 @@ namespace Infrastructure.Helpers
         public static void Post<TApi>(string url, Dictionary<string, string> formData = null)
             where TApi : IApiResult
         {
-            try
-            {
-                formData = formData ?? new Dictionary<string, string>();
-                var result = _client.PostAsync(url,
-                    new FormUrlEncodedContent(formData)).Result;
-                result.EnsureSuccessStatusCode();
-                var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
-
-                if (data.ErrorCode != "0")
-                    throw new Exception(data.Message);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"HTTP POST 错误\n{url}", ex);
-            }
+            formData = formData ?? new Dictionary<string, string>();
+            InnerHttp<TApi>(url,
+                () => _client.PostAsync(url,
+                    new FormUrlEncodedContent(formData)).Result);
         }
 
-        public static void Post<TApi>(string url,string jsonData)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TApi"></typeparam>
+        /// <param name="url"></param>
+        /// <param name="jsonData"></param>
+        public static void Post<TApi>(string url, string jsonData)
             where TApi : IApiResult
         {
-            try
-            {
-                HttpContent httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                var result = _client.PostAsync(url, httpContent).Result;
-                result.EnsureSuccessStatusCode();
-                var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
-
-                if (data.ErrorCode != "0")
-                    throw new Exception(data.Message);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"HTTP POST 错误\n{url}", ex);
-            }
+            HttpContent httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            InnerHttp<TApi>(url,
+                () => _client.PostAsync(url, httpContent).Result);
         }
 
         /// <summary>
@@ -88,23 +72,43 @@ namespace Infrastructure.Helpers
         public static TResult Get<TApi, TResult>(string url)
             where TApi : IApiResult<TResult>
         {
+            return
+                InnerHttp<TApi>(url,
+                    () => _client.GetAsync(url).Result)
+                .Result;
+        }
+
+        /// <summary>
+        ///  
+        /// </summary>
+        /// <typeparam name="TApi"></typeparam>
+        /// <param name="url"></param>
+        public static void Get<TApi>(string url)
+            where TApi : IApiResult
+        {
+            InnerHttp<TApi>(url,
+                () => _client.GetAsync(url).Result);
+        }
+
+        private static TApi InnerHttp<TApi>(string url, Func<HttpResponseMessage> httpFunc)
+            where TApi : IApiResult
+        {
             try
             {
-                var result = _client.GetAsync(url).Result;
+                var result = httpFunc();
                 result.EnsureSuccessStatusCode();
                 var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
 
-                if (data.ErrorCode != "0")
-                    throw new Exception(data.Message);
-
-                return data.Result;
+                if (data.ErrorCode != "0"
+                    && int.Parse(data.ErrorCode.ToString()) != 0)
+                    throw new SystemException(data.Message,
+                        new SystemException(data.ErrorCode));
+                return data;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is SystemException))
             {
-                throw new Exception($"HTTP GET 错误\n{url}", ex);
+                throw new Exception($"HTTP POST 错误\n{url}", ex);
             }
         }
-
     }
-
 }

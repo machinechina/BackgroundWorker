@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width" />
     <title>@@Title安装向导</title>
     <style>
-        input,select {
+        input, select {
             width: 100% !important;
             height: inherit;
         }
@@ -72,6 +72,10 @@
             .LinkBtn:hover {
                 background: #fb8243;
             }
+
+        strong {
+            color: hotpink;
+        }
     </style>
 
     <link href="http://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
@@ -100,14 +104,19 @@
 
             <li><h3>说明:</h3></li>
             <li>
-                以上参数填好后点击<strong>生成链接</strong>,然后复制到服务器上的<strong>IE浏览器</strong>进行安装
+                该页面根据应用的<strong>config文件</strong>自动生成,默认值为<strong>config文件</strong>中的值,修改该页面的参数以覆盖默认配置
             </li>
             <li>
-                对于多台服务器的配置,生成不同的链接后分别安装即可
-                (注意一台服务器只能安装一次)
+                参数填好后点击<strong>生成链接</strong>,复制到<strong>IE浏览器</strong>安装
+                其他浏览器需安装插件
+                <a href="https://chrome.google.com/webstore/detail/clickonce-for-google-chro/kekahkplibinaibelipdcikofmedafmb"><img width="24" src="http://findicons.com/files/icons/2781/google_jfk_icons/32/chrome_ico.png" /></a>
+                <a href="https://addons.mozilla.org/en-us/firefox/addon/fxclickonce/"><img width="24" src="http://findicons.com/files/icons/783/mozilla_pack/32/firefox.png" /></a>
             </li>
             <li>
                 如果以上配置有变动,在服务器上停止程序,然后用新的安装链接运行一次即可
+            </li>
+            <li>
+                请将以上说明完整表述给安装使用者
             </li>
         </ul>
         <br />

@@ -15,36 +15,46 @@ namespace Infrastructure.Workers
     {
         private string _url;
         private Func<bool> _breakCondition;
-        private Action<TResult> _returnAction;
+        private Action<TResult> _mainAction;
+        private bool _runReturnActionAsync;
 
         /// <summary>
         /// 长轮询Worker
         /// </summary>
         /// <param name="url">请求地址(GET)</param>
         /// <param name="breakCondition"></param>
-        /// <param name="returnAction"></param>
+        /// <param name="mainAction"></param>
+        /// <param name="loopInterval"></param>
+        /// <param name="stopAfterContinuousIdleLoopCount"></param>
         public LongPollingWorker(string url,
             Func<bool> breakCondition = null,
-            Action<TResult> returnAction = null)
-            : base(1000)
+            Action<TResult> mainAction = null,
+            int loopInterval = 1000,
+            int stopAfterContinuousIdleLoopCount = 0)
+            : base(loopInterval, stopAfterContinuousIdleLoopCount)
         {
             _url = url;
-            _breakCondition = breakCondition;
-            _returnAction = returnAction;
+            _breakCondition = breakCondition ?? (() => false);
+            _mainAction = mainAction;
         }
 
         /// <summary>
         ///
         /// </summary>
         /// <returns></returns>
-        protected override IntervalTask.WorkingState DoWork()
+        protected override WorkingState DoWork()
         {
             TResult result = default(TResult);
 
             if (!_breakCondition())//校验轮询条件
                 result = Helper.Get<TApi, TResult>(_url);
+            else
+                return WorkingState.IDLE;
+
             if (!_breakCondition())//长轮询耗时较长,轮询条件可能失效
-                Task.Factory.StartNew(() => _returnAction(result));
+                Task.Run(() => _mainAction(result));
+            else
+                return WorkingState.IDLE;
 
             return WorkingState.BUSY;
         }

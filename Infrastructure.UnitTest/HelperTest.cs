@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using Infrastructure.Extensions;
 using Infrastructure.Helpers;
+using Infrastructure.Web;
+using Infrastructure.Workers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infrastructure.UnitTest
@@ -69,6 +72,13 @@ namespace Infrastructure.UnitTest
             );
             Thread.Sleep(5000);
             Assert.AreEqual(13, resultOfPing2.ToString().Lines());
+
+            //Async and Shell
+            var procId = Helper.RunProcessAsync("win.ini");
+            Thread.Sleep(5000);
+            var proc = Process.GetProcessById(procId);
+            proc.Kill();
+            proc.WaitForExit();
         }
 
         [TestMethod]
@@ -122,5 +132,97 @@ namespace Infrastructure.UnitTest
         {
             var str1 = Helper.RandomString(10);
         }
+
+        #region Web Test
+
+        [TestMethod]
+        public void HttpGetTest()
+        {
+
+            Helper.SetBaseAddress("http://banpai.istudy.sh.cn/TaiXue.Api/api/");
+            var result1 = Helper.Get<ApiResult1, DateTime>("basic/gettime");
+            Assert.AreEqual(result1.Date, DateTime.Now.Date);
+
+            //使用全路径,覆盖BaseAddress
+            //{"code":-1,"msg":"\u9519\u8bef","datetime":"0.1650390625 ms"}
+            try
+            {
+                var url2 = "https://m.campus.qq.com/api/open/getObjectInfo";
+                var result2 = Helper.Get<ApiResult2, string>(url2);
+            }
+            catch (Exception ex)
+            {
+                Assert.AreEqual("错误", ex.Message);
+            }
+
+            //无返回Get,Code="0000"
+            //请在10秒之内按两次卡
+            try
+            {
+                Helper.Get<CardApiResult>("http://192.168.99.112:10240/StopDT?DelayTime=0");
+            }
+            catch { }
+            Helper.Get<CardApiResult>("http://192.168.99.112:10240/StartDT?QUESTION_TYPE=2&optionNum=6&resultNum=2");
+            Thread.Sleep(10000);
+            var keys = Helper.Get<CardApiResult, CardKeyData[]>("http://192.168.99.112:10240/GetAnsWerKey?StartNo=0");
+            Assert.AreEqual(2, keys.Length);
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                Assert.AreEqual(i, keys[i].No);
+            }
+
+            Helper.Get<CardApiResult>("http://192.168.99.112:10240/StopDT?DelayTime=0");
+
+        }
+
+        private class ApiResult1 : IApiResult<DateTime>
+        {
+            public DateTime Result { get; set; }
+
+            public string res_code { get; set; }
+
+            public string res_msg { get; set; }
+
+            public string ErrorCode => res_code;
+
+            public string ErrorMessage => res_msg;
+
+            public string Message => ErrorMessage;
+        }
+
+        private class ApiResult2 : IApiResult<string>
+        {
+            public string Result => "";
+            public string code { get; set; }
+            public string msg { get; set; }
+
+            public string ErrorCode => code;
+            public string Message => msg;
+        }
+
+        public class CardApiResult : IApiResult<CardKeyData[]>
+        {
+            public string ResultCode { get; set; }
+
+            public string ResultMsg { get; set; }
+            public CardKeyData[] KeyData { get; set; }
+
+            public string ErrorCode => ResultCode;
+
+            public string Message => ResultMsg;
+
+            public CardKeyData[] Result => KeyData;
+        }
+
+        public class CardKeyData
+        {
+            public int No { get; set; }
+            public string CardNo { get; set; }
+            public string Keyinfo { get; set; }
+            public DateTime KeyTime { get; set; }
+        }
+
+        #endregion Web Test
     }
 }

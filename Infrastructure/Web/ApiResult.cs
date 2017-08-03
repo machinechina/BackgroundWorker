@@ -19,10 +19,8 @@
         {
         }
 
-        public ApiResult(TResult result)
-        {
-            Result = result;
-        }
+        public ApiResult(TResult result) => Result = result;
+
     }
 
     public interface IApiResult
