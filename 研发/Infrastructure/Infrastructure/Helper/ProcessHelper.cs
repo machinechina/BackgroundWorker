@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using Infrastructure.Extensions;
 
 namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="fileName"></param>
         /// <param name="args"></param>
@@ -21,52 +21,71 @@ namespace Infrastructure.Helpers
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="fileName"></param>
         /// <param name="args"></param>
         /// <param name="outputEvent"></param>
         /// <param name="errorEvent"></param>
         /// <returns>Process Id</returns>
-        public static Process RunProcessAsync(string fileName, string args = "",
+        public static int RunProcessAsync(string fileName, string args = "",
             DataReceivedEventHandler outputEvent = null,
             DataReceivedEventHandler errorEvent = null)
         {
-            return ( Process )RunProcess(fileName, args, false, outputEvent);
+            return ( int )RunProcess(fileName, args, false, outputEvent);
         }
 
         private static object RunProcess(string fileName, string args = "", bool waitForExit = false,
             DataReceivedEventHandler outputEvent = null,
             DataReceivedEventHandler errorEvent = null)
         {
-            StringBuilder output = new StringBuilder();
-            StringBuilder error = new StringBuilder();
+            //true:ShellExecute,false:openProcess
+            //true相当于在run里面执行,可以运行非exe程序,但不可获取输出
+            //同步模式下只能运行exe程序
+            var useShellExecute = !Path.GetExtension(fileName)
+                                        .ToLower()
+                                        .IncludeIn(".exe", "");
+            //非exe程序不可获取输出
+            var redirectable = !useShellExecute;
+            //非exe程序必须创建window
+            var noWindow = !useShellExecute;
+            if (waitForExit && useShellExecute)
+                throw new Exception("同步模式下只能运行exe程序");
+
+            var output = new StringBuilder();
+            var error = new StringBuilder();
+
             using (var proc = new Process
             {
                 StartInfo =
                             {
                                 FileName =fileName,
                                 Arguments =args,
-                                UseShellExecute = false,
-                                CreateNoWindow = true,
-                                RedirectStandardOutput=true,
-                                RedirectStandardError=true
+                                UseShellExecute =useShellExecute,
+                                CreateNoWindow = noWindow,
+                                RedirectStandardOutput=redirectable,
+                                RedirectStandardError=redirectable
                             }
             })
             {
-
-                proc.OutputDataReceived += outputEvent ??
+                if (redirectable)
+                {
+                    proc.OutputDataReceived += outputEvent ??
                     new DataReceivedEventHandler((sender, e) =>
                      output.AppendLine(e.Data ?? ""));
-                proc.ErrorDataReceived += errorEvent ??
-                    new DataReceivedEventHandler((sender, e) =>
-                     error.AppendLine(e.Data ?? ""));
+                    proc.ErrorDataReceived += errorEvent ??
+                        new DataReceivedEventHandler((sender, e) =>
+                         error.AppendLine(e.Data ?? ""));
+                }
 
                 if (!proc.Start())
                     throw new InvalidOperationException($"启动进程错误:{proc}");
 
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
+                if (redirectable)
+                {
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
+                }
 
                 if (waitForExit)
                 {
@@ -81,10 +100,9 @@ namespace Infrastructure.Helpers
                     return output;
                 }
                 else
-                    return proc;
+                    return proc.Id;
+
             }
         }
-
-
     }
 }

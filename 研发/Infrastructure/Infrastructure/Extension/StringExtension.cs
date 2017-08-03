@@ -18,7 +18,7 @@ namespace Infrastructure.Extensions
             return Path.Combine(@this, str);
         }
 
-        public static string ToJointString(this object[] @this,
+        public static string ToJointString(this IEnumerable<object> @this,
             string seperator = ",")
         {
             return string.Join(seperator, @this);
@@ -39,6 +39,16 @@ namespace Infrastructure.Extensions
         public static int Lines(this string @this)
         {
             return @this?.Split('\n').Length ?? 0;
+        }
+
+        public static string ConvertToChinese(this decimal number)
+        {
+            var s = number.ToString("#L#E#D#C#K#E#D#C#J#E#D#C#I#E#D#C#H#E#D#C#G#E#D#C#F#E#D#C#.0B0A");
+            var d = Regex.Replace(s, @"((?<=-|^)[^1-9]*)|((?'z'0)[0A-E]*((?=[1-9])|(?'-z'(?=[F-L\.]|$))))|((?'b'[F-L])(?'z'0)[0A-L]*((?=[1-9])|(?'-z'(?=[\.]|$))))", "${b}${z}");
+            var r = Regex.Replace(d, ".", m => "负元空零壹贰叁肆伍陆柒捌玖空空空空空空空分角拾佰仟万亿兆京垓秭穰"[m.Value[0] - '-'].ToString());
+            if (r.EndsWith("元"))//这两行是我加的
+                r += "整";//感觉我拉低了前边代码的逼格……很惭愧
+            return r;
         }
         #region Regex   
         public static bool MatchRegex(this string @this,

@@ -79,7 +79,7 @@ namespace Infrastructure.Workers
         public void WaitForExit()
         {
             if (!IsRunning) return;
-            
+
             _mainTaskContinueWithTask?.Wait();
         }
 
@@ -87,5 +87,6 @@ namespace Infrastructure.Workers
         {
             get; protected set;
         } = false;
+
     }
 }

@@ -71,9 +71,7 @@ namespace Infrastructure.Threading
     {
         public static bool WaitCancellationRequested(
             this CancellationToken token,
-            TimeSpan timeout)
-        {
-            return token.WaitHandle.WaitOne(timeout);
-        }
+            TimeSpan timeout) =>
+            token.WaitHandle.WaitOne(timeout);
     }
 }

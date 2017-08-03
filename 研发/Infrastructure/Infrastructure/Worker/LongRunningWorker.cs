@@ -1,29 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Infrastructure.Threading;
 using static Infrastructure.Threading.IntervalTask;
 
 namespace Infrastructure.Workers
 {
+    /// <summary>
+    ///
+    /// </summary>
     public class LongRunningWorker : Worker
     {
-        private Action _action;
+        private Func<bool> _mainFunc;
 
-        public LongRunningWorker(Action action, int loopInterval) : base(loopInterval, stopAfterContinuousIdleLoopCount: -1)
-        {
-            _action = action;
-        }
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="mainFunc"></param>
+        /// <param name="loopInterval"></param>
+        /// <param name="stopAfterContinuousIdleLoopCount"></param>
+        public LongRunningWorker(
+            Func<bool> mainFunc,
+            int loopInterval = 1000,
+            int stopAfterContinuousIdleLoopCount = 0)
+            : base(loopInterval, stopAfterContinuousIdleLoopCount) =>
+                _mainFunc = mainFunc;
 
-        protected override IntervalTask.WorkingState DoWork()
-        {
-            _action();
-            return WorkingState.BUSY;
-        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mainAction"></param>
+        /// <param name="loopInterval"></param>
+        /// <param name="stopAfterContinuousIdleLoopCount"></param>
+        public LongRunningWorker(
+            Action mainAction,
+            int loopInterval = 1000,
+            int stopAfterContinuousIdleLoopCount = 0)
+            : base(loopInterval, stopAfterContinuousIdleLoopCount) =>
+                _mainFunc = () =>
+                  {
+                      mainAction();
+                      return true;
+                  };
+
+        protected override WorkingState DoWork() =>
+            _mainFunc() ? WorkingState.BUSY : WorkingState.IDLE;
     }
 }
-
-
-
