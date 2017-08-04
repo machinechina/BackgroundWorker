@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Extensions
 {
     public partial class Extension
     {
-
         public static string PathCombine(this string @this,
             string str)
         {
@@ -19,6 +15,12 @@ namespace Infrastructure.Extensions
         }
 
         public static string ToJointString(this IEnumerable<object> @this,
+            string seperator = ",")
+        {
+            return string.Join(seperator, @this);
+        }
+
+        public static string ToJointString(this char[] @this,
             string seperator = ",")
         {
             return string.Join(seperator, @this);
@@ -41,6 +43,11 @@ namespace Infrastructure.Extensions
             return @this?.Split('\n').Length ?? 0;
         }
 
+        public static string Sort(this string @this)
+        {
+            return string.Concat(@this.OrderBy(c => c));
+        }
+
         public static string ConvertToChinese(this decimal number)
         {
             var s = number.ToString("#L#E#D#C#K#E#D#C#J#E#D#C#I#E#D#C#H#E#D#C#G#E#D#C#F#E#D#C#.0B0A");
@@ -50,12 +57,15 @@ namespace Infrastructure.Extensions
                 r += "整";//感觉我拉低了前边代码的逼格……很惭愧
             return r;
         }
-        #region Regex   
+
+        #region Regex
+
         public static bool MatchRegex(this string @this,
             string regexPattern)
         {
             return Regex.IsMatch(@this, regexPattern);
         }
+
         public static IEnumerable<string> FindRegex(this string @this,
           string regexPattern)
         {
@@ -63,11 +73,13 @@ namespace Infrastructure.Extensions
                 .Cast<Match>()
                 .Select(m => m.Value);
         }
+
         public static string ReplaceRegex(this string @this,
                string regexPattern, string value)
         {
             return Regex.Replace(@this, regexPattern, value);
         }
-        #endregion
+
+        #endregion Regex
     }
 }

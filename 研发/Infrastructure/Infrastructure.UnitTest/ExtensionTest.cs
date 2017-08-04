@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Infrastructure.Extensions;
@@ -15,7 +16,7 @@ namespace Infrastructure.UnitTest
         public void JsonTest()
         {
             var a = "a".ToJson();
-            //  Assert.AreEqual("a".ToJson(), "a".JsonToObject<String>());
+            Assert.AreEqual("a".ToJson(), "a".JsonToObject<string>());
         }
 
         [TestMethod]
@@ -114,8 +115,24 @@ namespace Infrastructure.UnitTest
             Assert.AreEqual("AA\n".Lines(), 2);
             Assert.AreEqual("AA\nBB".Lines(), 2);
             Assert.AreEqual("AA\nBB\nCC".Lines(), 3);
+        }
 
+        [TestMethod]
+        public void Join()
+        {
+            var a = new string[] { "aaa", "bbb" };
+            Assert.AreEqual("aaa,bbb", a.ToJointString());
+            var b = new char[] { 'a', 'b' };
+            Assert.AreEqual("a,b", b.ToJointString());
+            var c = "abc";
+            Assert.AreEqual("a,b,c", c.ToArray().ToJointString());
+        }
 
+        [TestMethod]
+        public void Sort()
+        {
+            var a = "bcdaea";
+            Assert.AreEqual("aabcde", a.Sort());
         }
     }
 }

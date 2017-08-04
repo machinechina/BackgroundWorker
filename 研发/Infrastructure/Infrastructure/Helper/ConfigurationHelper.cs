@@ -33,8 +33,9 @@ namespace Infrastructure.Helpers
             return default(object);
         }
 
-        public static void SetAppConfig(string key, string value, string configName = null)
+        public static bool SetAppConfig(string key, string value, string configName = null)
         {
+            var modified = true;
             var config = configName != null ?
                 ConfigurationManager.OpenMappedExeConfiguration(
                     new ExeConfigurationFileMap
@@ -45,7 +46,10 @@ namespace Infrastructure.Helpers
                 ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
             if (config.AppSettings.Settings.AllKeys.Contains(key))
-                config.AppSettings.Settings[key].Value = value;
+                if (config.AppSettings.Settings[key].Value == value)
+                    modified = false;
+                else
+                    config.AppSettings.Settings[key].Value = value;
             else
                 config.AppSettings.Settings.Add(key, value);
 
@@ -53,6 +57,8 @@ namespace Infrastructure.Helpers
 
             if (configName == null)
                 ConfigurationManager.RefreshSection(config.AppSettings.SectionInformation.Name);
+
+            return modified;
         }
 
         private static string GetAppConfig(string key, string configName = null)

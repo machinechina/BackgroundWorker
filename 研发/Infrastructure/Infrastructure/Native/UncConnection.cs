@@ -15,7 +15,7 @@ namespace Infrastructure.Native
 
         /// <summary>
         /// 获得UNC路径的访问权
-        /// 用法: using (new UncConnection(@"\\UNC", new NetworkCredential("user", "password")))
+        /// 用法: using (new UncConnection(@"\\UNC_PATH", new NetworkCredential("user", "password")))
         /// </summary>
         /// <param name="networkName"></param>
         /// <param name="credentials"></param>
@@ -59,7 +59,7 @@ namespace Infrastructure.Native
                 }
                 else if (result == 1219)
                 {
-                    strErrMsg = "无法使用同一账户对服务器或共享目录进行多重连接.(确保[应用程序池-进程模型-标识]使用了正确的账户";
+                    strErrMsg = "无法使用同一账户对服务器或共享目录进行多重连接.(确保[应用程序池-进程模型-标识]使用了正确的账户)";
                 }
 
                 throw new Win32Exception(result, "Error connecting to " + networkName + " remote share.Error Code:" + result.ToString() + "." + strErrMsg);
