@@ -30,11 +30,14 @@ namespace Infrastructure.UnitTest
         [TestMethod]
         public void EnqueueAndDequeueByWorkBus()
         {
+            int times = 10;
+
             string[] data = new[] { "000", "111", "222", "333", "444", "555" };
             using (var queueC = new PersistentQueue(queryRoot.PathCombine("A")))
             using (var session = queueC.OpenSession())
             {
-                session.Enqueue(Encoding.UTF8.GetBytes(data[0]));
+                Parallel.For(0, times, _ =>
+                  session.Enqueue(Encoding.UTF8.GetBytes(data[0])));
                 session.Flush();
             }
 
@@ -42,26 +45,31 @@ namespace Infrastructure.UnitTest
             QueueWorkerBus.CreateDequeuers(queryRoot, result.Add,
                loopInterval: 1000,
                 idleLoopCountBeforeStopping: 3,
-                workersCountForEachQueue: 2);
-
-            QueueWorkerBus.Enqueue(queryRoot, "A", data[1]);
-            QueueWorkerBus.Enqueue(queryRoot, "A", data[2]);
-            QueueWorkerBus.Enqueue(queryRoot, "B", data[3]);
+                workersCountForEachQueue: 4);
+            Parallel.For(0, times, _ =>
+            {
+                QueueWorkerBus.Enqueue(queryRoot, "A", data[1]);
+                QueueWorkerBus.Enqueue(queryRoot, "A", data[2]);
+                QueueWorkerBus.Enqueue(queryRoot, "B", data[3]);
+            });
 
             // 3*1000=3秒后,转入休眠
             Thread.Sleep(10000);
 
             // 监测任务每10秒工作一次,发现有任务唤醒工作任务
-            QueueWorkerBus.Enqueue(queryRoot, "B", data[4]);
-            QueueWorkerBus.Enqueue(queryRoot, "C", data[5]);
+            Parallel.For(0, times, _ =>
+            {
+                QueueWorkerBus.Enqueue(queryRoot, "B", data[4]);
+                QueueWorkerBus.Enqueue(queryRoot, "C", data[5]);
+            });
+
             Thread.Sleep(15000);
 
             QueueWorkerBus.StopAllDequeuers();
 
-            Assert.AreEqual(data.Length, result.Count);
+            Assert.AreEqual(data.Length * times, result.Count);
             Assert.AreEqual(3, Directory.GetDirectories(queryRoot).Length);
         }
-
 
         [TestMethod]
         public void QueueWorkFactoryQueueCountStressTest()
@@ -160,8 +168,6 @@ namespace Infrastructure.UnitTest
             }
         }
 
-
-
         [TestMethod]
         public void EnqueueAndDequeue()
         {
@@ -188,7 +194,7 @@ namespace Infrastructure.UnitTest
             Enqueue("A", data[0]);
             Enqueue("A", data[1]);
             Enqueue("A", data[2]);
-            Thread.Sleep(3000);  
+            Thread.Sleep(3000);
             Assert.IsTrue(worker.IsRunning);
             Thread.Sleep(10000);
             Assert.IsFalse(worker.IsRunning);
