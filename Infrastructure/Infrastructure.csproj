@@ -62,6 +62,7 @@
     <Compile Include="Extension\DateTimeExtension.cs" />
     <Compile Include="Extension\FileExtension.cs" />
     <Compile Include="Extension\MathExtension.cs" />
+    <Compile Include="Extension\ReflectionExtension.cs" />
     <Compile Include="Extension\StringExtension.cs" />
     <Compile Include="Helper\ConfigurationHelper.cs" />
     <Compile Include="Extension\ConvertExtension.cs" />
