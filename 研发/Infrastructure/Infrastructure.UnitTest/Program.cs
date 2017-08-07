@@ -11,10 +11,9 @@ namespace Infrastructure.UnitTest
     {
         public static void Main(string[] args)
         {
- 
             Console.ReadLine();
         }
 
-
+      
     }
 }

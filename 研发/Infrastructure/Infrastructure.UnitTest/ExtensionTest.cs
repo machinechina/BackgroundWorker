@@ -102,6 +102,7 @@ namespace Infrastructure.UnitTest
             Assert.IsFalse("AA".Contains("a", false));
             Assert.IsTrue("AA".Contains("a", true));
 
+
         }
 
         [TestMethod]
@@ -134,5 +135,36 @@ namespace Infrastructure.UnitTest
             var a = "bcdaea";
             Assert.AreEqual("aabcde", a.Sort());
         }
+
+
+        #region Relection Test
+
+        [TestMethod]
+        public void FindMembers()
+        {
+            var allMembers = typeof(TestMembersA).FindMembers("test", true, true);
+            Assert.AreEqual(11, allMembers.Count());
+
+            var membersA = typeof(TestMembersA).FindMembers("A", true, true);
+            Assert.AreEqual(7, allMembers.Count());
+        }
+
+        class TestMembersA
+        {
+            string testFieldOfA;
+            string TestPropertyOfA { get; set; }
+            void TestFunctionOfA() { }
+
+            TestMembersB testMembersA;
+            TestMembersB testMembersB;
+        }
+
+        class TestMembersB
+        {
+            string testFieldOfB;
+            string TestPropertyOfB { get; set; }
+            void TestFunctionOfB() { }
+        }
+        #endregion
     }
 }
