@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 using System.Web;
@@ -39,7 +40,10 @@ namespace Infrastructure.Helpers
             //"If the directory already exists, this method does not create a new directory, but it returns a DirectoryInfo object for the existing directory."
             Directory.CreateDirectory(_localLogPath);
 
-
+            //fire an event when program closing by user operations while running in console mode.
+            Console.CancelKeyPress += (o, e) => ConsoleExiting?.Invoke(ConsoleExitReason.CancelKeyPressed);
+            handler = new ConsoleEventDelegate(ConsoleEventCallback);
+            SetConsoleCtrlHandler(handler, true);
         }
 
         #endregion Public Constructors
@@ -410,5 +414,29 @@ namespace Infrastructure.Helpers
 
         #endregion Private Methods
 
+
+        #region Console Closing Events
+        public enum ConsoleExitReason
+        {
+            WindowClosed, CancelKeyPressed
+        }
+        public delegate void ConsoleExitDelegate(ConsoleExitReason exitReason);
+        public static event ConsoleExitDelegate ConsoleExiting;
+
+        static bool ConsoleEventCallback(int eventType)
+        {
+
+            if (eventType == 2)
+            {
+                ConsoleExiting?.Invoke(ConsoleExitReason.WindowClosed);
+            }
+            return false;
+        }
+        static ConsoleEventDelegate handler;
+        private delegate bool ConsoleEventDelegate(int eventType);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleCtrlHandler(ConsoleEventDelegate callback, bool add);
+
+        #endregion
     }
 }
