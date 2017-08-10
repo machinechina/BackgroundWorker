@@ -48,6 +48,11 @@ namespace Infrastructure.Extensions
             return string.Concat(@this.OrderBy(c => c));
         }
 
+        public static IEnumerable<string> WhereNotEmpty(this IEnumerable<string> @this)
+        {
+            return @this.Where(s => !string.IsNullOrEmpty(s));
+        }
+
         public static string ConvertToChinese(this decimal number)
         {
             var s = number.ToString("#L#E#D#C#K#E#D#C#J#E#D#C#I#E#D#C#H#E#D#C#G#E#D#C#F#E#D#C#.0B0A");

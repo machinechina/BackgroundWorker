@@ -166,5 +166,41 @@ namespace Infrastructure.UnitTest
             void TestFunctionOfB() { }
         }
         #endregion
+
+        #region Expression Test
+
+        [TestMethod]
+        public void Then()
+        {
+            var value = 1;
+            var result2 = F(out value).Then(result =>
+              {
+                  result = false;
+                  value++;
+              });
+
+            Assert.IsTrue(result2);
+            Assert.AreEqual(3, value);
+        }
+
+        [TestMethod]
+        public void WhenTrue()
+        {
+            var value = 1;
+            var result2 = F(out value).WhenTrue(() =>
+            {
+                value++;
+            });
+
+            Assert.IsTrue(result2);
+            Assert.AreEqual(3, value);
+        }
+        bool F(out int value)
+        {
+            value = 2;
+            return true;
+        }
+
+        #endregion
     }
 }

@@ -13,7 +13,6 @@
         body, div, p, a.li, ul, dt, dd, dt, h1, h2, h3, h4, h5, h6 {
             margin: 0;
             padding: 0;
-            list-style: none;
             font-size: 14px;
             font-weight: 100;
             font-family: Microsoft Yahei;
@@ -100,11 +99,13 @@
     <div>
         <br />
         <br />
+        <h3 class="divTitle">说明:</h3> 
         <ul style="padding-left:100px;color:slategrey">
 
-            <li><h3>说明:</h3></li>
             <li>
-                该页面根据应用的<strong>config文件</strong>自动生成,默认值为<strong>config文件</strong>中的值,修改该页面的参数以覆盖默认配置
+                该页面根据应用的<strong>config文件</strong>自动生成,默认值为<strong>config文件</strong>中的值,标题和下拉选项来自该config上方注释,如:
+                <pre>&lt;!--读卡驱动模式[Service,Proxy,Remote]--&gt;<br />&lt;add key="CardReaderMode" value="Service" /&gt;</pre>
+                会生成标题为"读卡驱动模式",默认值为"Service",带有"Service,Proxy,Remote"三个选项的下拉列表
             </li>
             <li>
                 参数填好后点击<strong>生成链接</strong>,复制到<strong>IE浏览器</strong>安装
@@ -116,7 +117,7 @@
                 如果以上配置有变动,在服务器上停止程序,然后用新的安装链接运行一次即可
             </li>
             <li>
-                请将以上说明完整表述给安装使用者
+                请将以上两点完整表述给安装使用者
             </li>
         </ul>
         <br />

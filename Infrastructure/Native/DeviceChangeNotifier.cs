@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -18,6 +19,7 @@ namespace Infrastructure.Native
             t.SetApartmentState(ApartmentState.STA);
             t.IsBackground = true;
             t.Start();
+
         }
 
         public static void Stop()
@@ -52,9 +54,9 @@ namespace Infrastructure.Native
             // Trap WM_DEVICECHANGE
             if (m.Msg == 0x219)
             {
-                DeviceNotifyDelegate handler = DeviceNotify;
-                if (handler != null) handler(m);
+                DeviceNotify?.Invoke(m);
             }
+
             base.WndProc(ref m);
         }
     }
