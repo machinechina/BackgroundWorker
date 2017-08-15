@@ -1,25 +1,47 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
+﻿using System.Threading;
 using System.Windows.Forms;
+using static Infrastructure.Native.DeviceChangeNotifierForm;
 
 namespace Infrastructure.Native
 {
-    public class DeviceChangeNotifier : Form
+    public class DeviceChangeNotifier
+    {
+        public static event DeviceNotifyDelegate DeviceNotify;
+
+        public static void Start()
+        {
+            DeviceChangeNotifierForm.DeviceNotify -= DeviceNotify;
+            DeviceChangeNotifierForm.DeviceNotify += DeviceNotify;
+            DeviceChangeNotifierForm.Start();
+        }
+
+        public static void Stop()
+        {
+            DeviceChangeNotifierForm.DeviceNotify -= DeviceNotify;
+            DeviceChangeNotifierForm.Stop();
+        }
+    }
+
+
+    public class DeviceChangeNotifierForm : Form
     {
         public delegate void DeviceNotifyDelegate(Message msg);
 
         public static event DeviceNotifyDelegate DeviceNotify;
 
-        private static DeviceChangeNotifier mInstance;
+        private static DeviceChangeNotifierForm mInstance;
+        private static bool _isRunning = false;
 
         public static void Start()
         {
+            if (_isRunning)
+                return;
+            _isRunning = true;
+
             Thread t = new Thread(runForm);
             t.SetApartmentState(ApartmentState.STA);
             t.IsBackground = true;
             t.Start();
-
         }
 
         public static void Stop()
@@ -28,11 +50,12 @@ namespace Infrastructure.Native
                 return;//Notifier not started
             DeviceNotify = null;
             mInstance.Invoke(new MethodInvoker(mInstance.endForm));
+            _isRunning = false;
         }
 
         private static void runForm()
         {
-            Application.Run(new DeviceChangeNotifier());
+            Application.Run(new DeviceChangeNotifierForm());
         }
 
         private void endForm()
