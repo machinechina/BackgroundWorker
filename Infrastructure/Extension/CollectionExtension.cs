@@ -107,5 +107,10 @@ namespace Infrastructure.Extensions
         {
             return !values.Contains(@this);
         }
+
+        public static IEnumerable<T> Sort<T>(this IEnumerable<T> @this)
+        {
+            return @this.OrderBy(o => o);
+        }
     }
 }

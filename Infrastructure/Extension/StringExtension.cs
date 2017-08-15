@@ -48,6 +48,8 @@ namespace Infrastructure.Extensions
             return string.Concat(@this.OrderBy(c => c));
         }
 
+
+
         public static IEnumerable<string> WhereNotEmpty(this IEnumerable<string> @this)
         {
             return @this.Where(s => !string.IsNullOrEmpty(s));
