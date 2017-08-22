@@ -23,5 +23,16 @@ namespace Infrastructure.Extensions
             return col.Keys.Cast<string>()
                       .ToDictionary(k => k, v => col[v]);
         }
+
+        public static T ConvertTo<T>(this object @this)
+        {
+            return ( T )Convert.ChangeType(@this, typeof(T));
+        }
+
+        public static object ConvertTo(this object @this ,Type type)
+        {
+            return Convert.ChangeType(@this, type);
+        }
+
     }
 }

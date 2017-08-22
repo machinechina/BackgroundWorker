@@ -202,5 +202,15 @@ namespace Infrastructure.UnitTest
         }
 
         #endregion
+
+        #region Convert
+        [TestMethod]
+        public void Convert()
+        {
+            string a=null;
+            Assert.AreEqual(0, "0".ConvertTo<int>());
+            Assert.AreEqual(null, a.ConvertTo<string>());
+        }
+        #endregion
     }
 }
