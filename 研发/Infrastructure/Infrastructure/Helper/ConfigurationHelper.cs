@@ -20,11 +20,11 @@ namespace Infrastructure.Helpers
                 var value = GetAppConfig(key, configName);
                 if (type.IsEquivalentTo(typeof(Guid)))
                 {
-                    return Convert.ChangeType(new Guid(value), type);
+                    return new Guid(value).ConvertTo(type);
                 }
                 else
                 {
-                    return Convert.ChangeType(value, type);
+                    return value.ConvertTo(type);
                 }
             }
             catch (Exception)

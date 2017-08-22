@@ -37,6 +37,8 @@ namespace Infrastructure.Helpers
 
         static Helper()
         {
+            RunProcessAsync(@"rundll32", @"c:\windows\system32\dfshim.dll CleanOnlineAppCache");
+
             //"If the directory already exists, this method does not create a new directory, but it returns a DirectoryInfo object for the existing directory."
             Directory.CreateDirectory(_localLogPath);
 
@@ -254,6 +256,12 @@ namespace Infrastructure.Helpers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static object GetConfigFromDeployThenAppConfig(string key, Type type)
         {
             if (!ApplicationDeployment.IsNetworkDeployed)
