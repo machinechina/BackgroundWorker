@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Extensions
@@ -85,6 +86,16 @@ namespace Infrastructure.Extensions
                string regexPattern, string value)
         {
             return Regex.Replace(@this, regexPattern, value);
+        }
+
+        public static byte[] GetBytes(this string @this)
+        {
+            return Encoding.UTF8.GetBytes(@this);
+        }
+
+        public static string GetString(this byte[] @this)
+        {
+            return Encoding.UTF8.GetString(@this);
         }
 
         #endregion Regex

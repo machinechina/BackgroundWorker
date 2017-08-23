@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Infrastructure.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -92,7 +91,6 @@ namespace Infrastructure.UnitTest
             Assert.AreEqual(1, dic6.Count);
             Assert.AreEqual(100, dic6[1].Count);
             Assert.AreEqual("a", dic6[1][0]);
-
         }
 
         [TestMethod]
@@ -101,8 +99,6 @@ namespace Infrastructure.UnitTest
             Assert.IsTrue("AA".Contains("A", false));
             Assert.IsFalse("AA".Contains("a", false));
             Assert.IsTrue("AA".Contains("a", true));
-
-
         }
 
         [TestMethod]
@@ -136,7 +132,6 @@ namespace Infrastructure.UnitTest
             Assert.AreEqual("aabcde", a.Sort());
         }
 
-
         #region Relection Test
 
         [TestMethod]
@@ -149,23 +144,28 @@ namespace Infrastructure.UnitTest
             Assert.AreEqual(7, allMembers.Count());
         }
 
-        class TestMembersA
+        private class TestMembersA
         {
-            string testFieldOfA;
-            string TestPropertyOfA { get; set; }
-            void TestFunctionOfA() { }
+            private string testFieldOfA;
+            private string TestPropertyOfA { get; set; }
 
-            TestMembersB testMembersA;
-            TestMembersB testMembersB;
+            private void TestFunctionOfA()
+            { }
+
+            private TestMembersB testMembersA;
+            private TestMembersB testMembersB;
         }
 
-        class TestMembersB
+        private class TestMembersB
         {
-            string testFieldOfB;
-            string TestPropertyOfB { get; set; }
-            void TestFunctionOfB() { }
+            private string testFieldOfB;
+            private string TestPropertyOfB { get; set; }
+
+            private void TestFunctionOfB()
+            { }
         }
-        #endregion
+
+        #endregion Relection Test
 
         #region Expression Test
 
@@ -195,22 +195,25 @@ namespace Infrastructure.UnitTest
             Assert.IsTrue(result2);
             Assert.AreEqual(3, value);
         }
-        bool F(out int value)
+
+        private bool F(out int value)
         {
             value = 2;
             return true;
         }
 
-        #endregion
+        #endregion Expression Test
 
         #region Convert
+
         [TestMethod]
         public void Convert()
         {
-            string a=null;
+            string a = null;
             Assert.AreEqual(0, "0".ConvertTo<int>());
             Assert.AreEqual(null, a.ConvertTo<string>());
         }
-        #endregion
+
+        #endregion Convert
     }
 }
