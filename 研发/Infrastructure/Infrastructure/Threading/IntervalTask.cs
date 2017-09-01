@@ -22,9 +22,9 @@ namespace Infrastructure.Threading
                 {
                     var continuousIdleLoopCount = 0;
 
-                    for (;;)
+                    for (; ; )
                     {
-                        var workingState = WorkingState.IDLE;
+                        var workingState = WorkingState.BUSY;
                         try
                         {
                             workingState = func();

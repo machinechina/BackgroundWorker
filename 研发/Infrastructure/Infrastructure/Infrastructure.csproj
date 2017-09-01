@@ -42,6 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Deployment" />
@@ -58,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attrributes\Parameters.cs" />
     <Compile Include="Extension\CollectionExtension.cs" />
     <Compile Include="Extension\DateTimeExtension.cs" />
     <Compile Include="Extension\ExpressionExtension.cs" />
@@ -100,6 +102,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy Infrastructure.*  $(SolutionDir)\..\..\班牌\ClassBrand.Shell.MultiServer\RefBins\</PostBuildEvent>
