@@ -29,10 +29,9 @@ namespace Infrastructure.Extensions
             return ( T )Convert.ChangeType(@this, typeof(T));
         }
 
-        public static object ConvertTo(this object @this ,Type type)
+        public static object ConvertTo(this object @this, Type type)
         {
             return Convert.ChangeType(@this, type);
         }
-
     }
 }
