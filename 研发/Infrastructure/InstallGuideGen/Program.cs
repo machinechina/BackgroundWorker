@@ -55,9 +55,11 @@ public class Program
 
             Console.WriteLine($"配置文件:{configFilePath}");
 
-            xml.Load(configFilePath);
-
-            ReplaceXml(rows, xml);
+            if (File.Exists(configFilePath))
+            {
+                xml.Load(configFilePath);
+                ReplaceXml(rows, xml);
+            }
 
             var template = File.OpenText("InstallGuideTemplate.html").ReadToEnd();
 
@@ -74,12 +76,13 @@ public class Program
         {
             Console.WriteLine("错误:请将此程序和InstallGuideTemplate.html一起置于Clickonce发布目录(和.application文件同一目录)后运行\n");
 
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.ToString());
         }
     }
 
     private static void ReplaceXml(StringBuilder rows, XmlDocument xml)
     {
+        if (xml.GetElementsByTagName("appSettings").Count == 0) return;
         foreach (XmlNode node in xml.GetElementsByTagName("appSettings")[0].ChildNodes)
         {
             if (node.NodeType == XmlNodeType.Element && node.Name == "add")

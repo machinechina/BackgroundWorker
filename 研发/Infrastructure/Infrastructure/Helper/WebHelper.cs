@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -108,6 +110,15 @@ namespace Infrastructure.Helpers
             catch (Exception ex) when (!(ex is SystemException))
             {
                 throw new Exception($"HTTP POST 错误\n{url}", ex);
+            }
+        }
+
+        public static void DownloadFile(string fileUrl, string filePath = null)
+        {
+            using (var client = new WebClient())
+            {
+                EnsureFilePathExists(filePath);
+                client.DownloadFile(fileUrl, filePath ?? Path.GetFileName(fileUrl));
             }
         }
     }
