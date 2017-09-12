@@ -10,18 +10,23 @@ namespace Infrastructure.Helpers
     public partial class Helper
     {
         /// <summary>
-        ///
+        ///同步运行进程
         /// </summary>
         /// <param name="fileName"></param>
         /// <param name="args"></param>
+        /// <param name="cmdPromptCommand">使用命令行打开的外部命令,如mklink</param>
         /// <returns>Process output</returns>
-        public static string RunProcess(string fileName, string args = "")
+        public static string RunProcess(string fileName, string args = "", bool cmdPromptCommand = false)
         {
-            return RunProcess(fileName, args, true).ToString();
+            if (cmdPromptCommand)
+                return RunProcessInternal("cmd", $"/c {fileName} {args}", true)
+                    .ToString();
+            else
+                return RunProcessInternal(fileName, args, true).ToString();
         }
 
         /// <summary>
-        ///
+        ///异步运行进程
         /// </summary>
         /// <param name="fileName"></param>
         /// <param name="args"></param>
@@ -32,10 +37,11 @@ namespace Infrastructure.Helpers
             DataReceivedEventHandler outputEvent = null,
             DataReceivedEventHandler errorEvent = null)
         {
-            return ( int )RunProcess(fileName, args, false, outputEvent);
+            return ( int )RunProcessInternal(fileName, args, false, outputEvent);
         }
 
-        private static object RunProcess(string fileName, string args = "", bool waitForExit = false,
+
+        private static object RunProcessInternal(string fileName, string args = "", bool waitForExit = false,
             DataReceivedEventHandler outputEvent = null,
             DataReceivedEventHandler errorEvent = null)
         {

@@ -45,6 +45,16 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
@@ -78,13 +88,15 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ExtensionTest.cs" />
+    <Compile Include="HelperTest\FileHelperTest.cs" />
+    <Compile Include="HelperTest\ApplicationHelperTest.cs" />
     <Compile Include="ParamtersTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="QueueWorkerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestModel.cs" />
     <Compile Include="DataStructureTest.cs" />
-    <Compile Include="HelperTest.cs" />
+    <Compile Include="HelperTest\HelperTest.cs" />
     <Compile Include="WorkerTest.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +122,10 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="TestFiles\test.png" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

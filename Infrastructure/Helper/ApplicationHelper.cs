@@ -17,7 +17,6 @@ namespace Infrastructure.Helpers
 {
     public partial class Helper
     {
-
         #region Private Fields
 
         /// <summary>
@@ -32,23 +31,6 @@ namespace Infrastructure.Helpers
         private static IDictionary<string, string> _deployQuerys;
 
         #endregion Private Fields
-
-        #region Public Constructors
-
-        static Helper()
-        {
-            RunProcessAsync(@"rundll32", @"c:\windows\system32\dfshim.dll CleanOnlineAppCache");
-
-            //"If the directory already exists, this method does not create a new directory, but it returns a DirectoryInfo object for the existing directory."
-            Directory.CreateDirectory(_localLogPath);
-
-            //fire an event when program closing by user operations while running in console mode.
-            Console.CancelKeyPress += (o, e) => ConsoleExiting?.Invoke(ConsoleExitReason.CancelKeyPressed);
-            handler = new ConsoleEventDelegate(ConsoleEventCallback);
-            SetConsoleCtrlHandler(handler, true);
-        }
-
-        #endregion Public Constructors
 
         #region Public Enums
 
@@ -78,13 +60,13 @@ namespace Infrastructure.Helpers
         #region Public Properties
 
         /// <summary>
-        /// First time running after update
-        /// It's 3-state boolean 
-        /// because once called,old version will be set equal to new version 
-        /// It cannot be init in static ctor 
+        /// 从安装链接安装后和/或版本更新后的第一次启动
+        /// It's 3-state boolean
+        /// because once called,old version will be set equal to new version
+        /// It cannot be init in static ctor
         /// because sometimes app will restart to grant admin authorize
         /// </summary>
-        public static bool JustUpdated
+        public static bool JustUpdatedOrReinstalled
         {
             get
             {
@@ -101,11 +83,65 @@ namespace Infrastructure.Helpers
                 return false;
             }
         }
+
         private static bool? _justUpdated;
 
         #endregion Public Properties
 
         #region Public Methods
+
+        /// <summary>
+        /// 将大文件统一存放,而不是每次发布/安装都重新拷贝
+        /// 每次调用会判断以下先决条件:
+        /// 1 更新后的首次启动
+        /// 2 指定的操作系统位数 (is64bit,null表示不区分)
+        /// 3 源文件的hash不等于目标位置的fileName对应文件的hash
+        /// 3.1 源文件不存在则会预先下载,下载后自动重命名为hash
+        /// 3.2 目标文件不存在则必定执行
+        /// 目标文件使用如下策略创建
+        /// 1 删除目标文件(如果存在)
+        /// 2 使用软连接mklink命令映射到当前执行目录,映射名为fileName
+        /// 3 如果上一步出错,则直接复制源文件到目标位置,重命名为fileName
+        /// md5 小写无横杠
+        /// </summary>
+        public static void InitializeRefFile(string fileName, string fileUrl, string md5, bool? is64bit = null)
+        {
+#if !TEST
+            if (!JustUpdatedOrReinstalled)
+            {
+                return;
+            }
+#endif
+            if (is64bit.HasValue)
+            {
+                if (is64bit.Value != Environment.Is64BitOperatingSystem)
+                {
+                    return;
+                }
+            }
+
+            var sourceFilePath = $"{_localRefFilePath}\\{md5}\\{fileName}";
+            if (!File.Exists(sourceFilePath))
+            {
+                DownloadFile(fileUrl, sourceFilePath);
+            }
+
+            if (!File.Exists(fileName) || GetMD5(fileName) != md5)
+            {
+                File.Delete(fileName);
+                try
+                {
+                    RunProcess("mklink", $"\"{fileName}\" \"{sourceFilePath}\"", true);
+                }
+                catch (Exception ex)
+                {
+                    Log(ex, "创建文件链接失败:{fileName}");
+                    File.Copy(sourceFilePath, fileName);
+                }
+            }
+
+            //Environment.Is64BitOperatingSystem
+        }
 
         /// <summary>
         /// 检查更新
@@ -257,7 +293,7 @@ namespace Infrastructure.Helpers
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="key"></param>
         /// <param name="type"></param>
@@ -294,7 +330,11 @@ namespace Infrastructure.Helpers
                     _deployQuerys = HttpUtility.ParseQueryString(ApplicationDeployment.CurrentDeployment.ActivationUri.Query)
                         .ToDictionary();
 
-                    File.WriteAllText(_localStorePath, _deployQuerys.ToJson());//一旦获取到url params就持久化
+                    //一旦获取到url params就持久化
+                    File.WriteAllText(_localStorePath, _deployQuerys.ToJson());
+
+                    //删除版本文件,这样JustUpdated调用时将返回true
+                    File.Delete(_localVersionPath);
                 }
                 catch { _deployQuerys = new Dictionary<string, string>(); }
 
@@ -422,29 +462,33 @@ namespace Infrastructure.Helpers
 
         #endregion Private Methods
 
-
         #region Console Closing Events
+
         public enum ConsoleExitReason
         {
             WindowClosed, CancelKeyPressed
         }
+
         public delegate void ConsoleExitDelegate(ConsoleExitReason exitReason);
+
         public static event ConsoleExitDelegate ConsoleExiting;
 
-        static bool ConsoleEventCallback(int eventType)
+        private static bool ConsoleEventCallback(int eventType)
         {
-
             if (eventType == 2)
             {
                 ConsoleExiting?.Invoke(ConsoleExitReason.WindowClosed);
             }
             return false;
         }
-        static ConsoleEventDelegate handler;
+
+        private static ConsoleEventDelegate handler;
+
         private delegate bool ConsoleEventDelegate(int eventType);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleCtrlHandler(ConsoleEventDelegate callback, bool add);
 
-        #endregion
+        #endregion Console Closing Events
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Infrastructure.Helpers;
 
 namespace Infrastructure.UnitTest
 {
