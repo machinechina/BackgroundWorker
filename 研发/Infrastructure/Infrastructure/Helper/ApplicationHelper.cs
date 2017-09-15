@@ -121,7 +121,7 @@ namespace Infrastructure.Helpers
             }
 
             var sourceFilePath = $"{_localRefFilePath}\\{md5}\\{fileName}";
-            if (!File.Exists(sourceFilePath))
+            if (!File.Exists(sourceFilePath) || GetMD5(sourceFilePath) != md5)
             {
                 DownloadFile(fileUrl, sourceFilePath);
             }
