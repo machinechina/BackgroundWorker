@@ -12,7 +12,11 @@ namespace Infrastructure.Helpers
     {
         public static void EnsureFilePathExists(string filePath)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            var path = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(path))
+            {
+                Directory.CreateDirectory(path);
+            }
         }
 
         public static string ReadFile(string filePath)
@@ -39,6 +43,6 @@ namespace Infrastructure.Helpers
                 }
             }
         }
- 
+
     }
 }

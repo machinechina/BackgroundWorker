@@ -117,7 +117,9 @@ namespace Infrastructure.Helpers
         {
             using (var client = new WebClient())
             {
+               
                 EnsureFilePathExists(filePath);
+
                 client.DownloadFile(fileUrl, filePath ?? Path.GetFileName(fileUrl));
             }
         }
