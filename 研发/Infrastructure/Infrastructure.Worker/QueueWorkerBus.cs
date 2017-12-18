@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DiskQueue;
+using Infrastructure.Workers;
 
 namespace Infrastructure.QueueWorker
 {
@@ -20,7 +21,7 @@ namespace Infrastructure.QueueWorker
         private static QueueWatchWorker _watchWorker;
 
         private static string _queueRootFolder;
-        private static int _waitInterval;
+        private static int _loopInterval;
         private static short _workersCountForEachQueue;
         private static int _stopAfterContinuousIdleLoopCount;
 
@@ -43,7 +44,7 @@ namespace Infrastructure.QueueWorker
             _dequeueAction = dequeueAction
                 ?? throw new Exception("必须指定操作");
 
-            _waitInterval = loopInterval >= 0 ? loopInterval
+            _loopInterval = loopInterval >= 0 ? loopInterval
                 : throw new Exception("等待周期必须>=0");
 
             _stopAfterContinuousIdleLoopCount = idleLoopCountBeforeStopping >= 0
@@ -61,10 +62,11 @@ namespace Infrastructure.QueueWorker
 
         /// <summary>
         /// 停止所有队列的所有Workers
+        /// 由于清理顺序要要求,暂时不能通过WorkerFactory.StopAll的方式清理
         /// </summary>
         public static void StopAllDequeuers()
         {
-            _watchWorker?.Stop();//确保不会再次被唤醒
+            _watchWorker?.Stop();//首先停止watcher,确保其他worker不会再次被唤醒
             Parallel.ForEach(_workers.Values.SelectMany(_ => _), w => w.Stop());
         }
 
@@ -90,7 +92,7 @@ namespace Infrastructure.QueueWorker
         }
 
         /// <summary>
-        /// 为制定队列开启Worker
+        /// 为指定队列开启Workers
         /// 如果没有则创建
         /// </summary>
         /// <param name="queueName"></param>
@@ -99,14 +101,14 @@ namespace Infrastructure.QueueWorker
             lock (_workers)//确保并发时不会创建额外Workers
             {
                 _workers.GetOrAdd(queueName, _ =>
-                     {
-                         var workers = new DequeueWorker[_workersCountForEachQueue];
-                         for (int i = 0; i < _workersCountForEachQueue; i++)
-                         {
-                             workers[i] = new DequeueWorker(_queueRootFolder, queueName, _dequeueAction, _waitInterval, _stopAfterContinuousIdleLoopCount);
-                         }
-                         return workers;
-                     })
+                {
+                    var workers = new DequeueWorker[_workersCountForEachQueue];
+                    for (int i = 0; i < _workersCountForEachQueue; i++)
+                    {
+                        workers[i] = new DequeueWorker(_queueRootFolder, queueName, _dequeueAction, _loopInterval, _stopAfterContinuousIdleLoopCount);
+                    }
+                    return workers;
+                })
                 .AsParallel().ForAll(w => w.Start());
             }
         }

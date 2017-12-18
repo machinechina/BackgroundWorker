@@ -3,19 +3,28 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Helpers;
 using Infrastructure.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.CSharp;
 
 namespace Infrastructure.UnitTest
 {
     [TestClass]
     public class ExtensionTest
     {
+        public class Foo { public string Bar { get; set; } }
+
         [TestMethod]
         public void JsonTest()
         {
-            var a = "a".ToJson();
-            Assert.AreEqual("a".ToJson(), "a".JsonToObject<string>());
+            var testString = "";
+            testString = nameof(testString);
+
+            var a = testString.ToJson();
+            Assert.AreEqual(testString, a.JsonToObject<string>());
+
+            Assert.AreEqual(testString, (new Foo { Bar = testString }.ToJson()).JsonToDynamic().Bar);
         }
 
         [TestMethod]
@@ -214,7 +223,7 @@ namespace Infrastructure.UnitTest
             Assert.AreEqual(null, a.ConvertTo<string>());
         }
 
- 
+
         #endregion Convert
     }
 }

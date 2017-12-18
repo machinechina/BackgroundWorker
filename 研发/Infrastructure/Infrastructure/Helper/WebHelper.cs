@@ -68,6 +68,35 @@ namespace Infrastructure.Helpers
         ///
         /// </summary>
         /// <typeparam name="TApi"></typeparam>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="content"></param>
+        public static void Post(string url, Dictionary<string, string> formData = null)
+        {
+            formData = formData ?? new Dictionary<string, string>();
+            InnerHttp(url,
+                () => _client.PostAsync(url,
+                    new FormUrlEncodedContent(formData)).Result);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TApi"></typeparam>
+        /// <param name="url"></param>
+        /// <param name="jsonData"></param>
+        public static void Post(string url, string jsonData)
+        {
+            HttpContent httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            InnerHttp(url,
+                () => _client.PostAsync(url, httpContent).Result);
+        }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TApi"></typeparam>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="url"></param>
         /// <returns></returns>
@@ -99,13 +128,32 @@ namespace Infrastructure.Helpers
             {
                 var result = httpFunc();
                 result.EnsureSuccessStatusCode();
-                var data = result.Content.ReadAsStringAsync().Result.JsonToObject<TApi>();
+                var data = result.Content.ReadAsStringAsync()
+                    .Result
+                    .JsonToObject<TApi>();
 
-                if (data.ErrorCode != "0"
-                    && int.Parse(data.ErrorCode.ToString()) != 0)
+                if (data.ErrorCode
+                            != (( int )ErrorCode.NoError).ToString()
+                        && int.Parse(data.ErrorCode.ToString()) != 0)
                     throw new SystemException(data.Message,
                         new SystemException(data.ErrorCode));
+
                 return data;
+            }
+            catch (Exception ex) when (!(ex is SystemException))
+            {
+                throw new Exception($"HTTP POST 错误\n{url}", ex);
+            }
+        }
+
+        private static string InnerHttp(string url, Func<HttpResponseMessage> httpFunc)
+        {
+            try
+            {
+                var result = httpFunc();
+                result.EnsureSuccessStatusCode();
+                return result.Content.ReadAsStringAsync()
+                    .Result;
             }
             catch (Exception ex) when (!(ex is SystemException))
             {
@@ -117,7 +165,7 @@ namespace Infrastructure.Helpers
         {
             using (var client = new WebClient())
             {
-               
+
                 EnsureFilePathExists(filePath);
 
                 client.DownloadFile(fileUrl, filePath ?? Path.GetFileName(fileUrl));

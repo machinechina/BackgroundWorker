@@ -2,7 +2,7 @@
 {
     public enum ErrorCode
     {
-        NoError,
+        NoError = 0,
         UnknownError
     }
 }

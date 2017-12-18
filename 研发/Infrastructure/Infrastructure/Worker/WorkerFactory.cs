@@ -9,6 +9,7 @@ namespace Infrastructure.Workers
     public class WorkerFactory
     {
         static List<IWorker> _workers = new List<IWorker>();
+
         public static void AddWorker(IWorker worker, bool runImmediately = false)
         {
             if (_workers.Contains(worker))

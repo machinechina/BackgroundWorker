@@ -135,7 +135,7 @@ namespace Infrastructure.Helpers
                 }
                 catch (Exception ex)
                 {
-                    Log(ex, "创建文件链接失败:{fileName}");
+                    Error(ex, "创建文件链接失败:{fileName}");
                     File.Copy(sourceFilePath, fileName);
                 }
             }
@@ -166,7 +166,7 @@ namespace Infrastructure.Helpers
                 }
                 catch (Exception ex)
                 {
-                    Log(ex);
+                    Error(ex);
                     throw new Exception($"升级到{updateInfo?.AvailableVersion?.ToString() ?? "最新版本"}时出错");
                 }
             }
@@ -194,6 +194,7 @@ namespace Infrastructure.Helpers
         /// 缺点:
         /// MetroApp无法正常使用;
         /// [严重]Win10的某个版本在关闭内置管理员后,第二次安装会无法打开程序,该程序会处于锁定状态(需要在文件属性中手动解锁才能使用),如果发生这种情况要考虑使用RunAsAdmin策略
+        /// [注意]请确保closeUAC.bat文件存在
         /// 策略2:RunAsAdmin (建议一般程序使用)
         /// 程序运行时发现非管理员权限时,尝试以管理员权限重启(调用自身进程)
         /// 此时的进程虽然管理员权限,但是不属于网络部署,无法自动升级
@@ -203,6 +204,10 @@ namespace Infrastructure.Helpers
         /// 缺点:
         /// 流程复杂,程序一共要启动三次
         /// [注意]只有第一次启动时能初始化url参数,因此<see cref="InitDeployQueryString"/>必须在此方法之前调用
+        /// [注意]这种模式下需要开启以下策略开启: "User Account Control: Use Admin Approval Mode for the built-in Administrator account" (gpedit.msc>Computer Configuration>Windows Settings>Security Settings>Local Policies>Security Options)
+        /// [注意]这种模式下,webdeploy出现USER_NOT_ADMIN错误,需要进行如下操作:
+        /// 1.MsDepSvc 服务配制成内置管理员账户启动
+        /// 2.添加组MSDepSvcUsers,将部署用户加入组中
         /// </summary>
         public static void EnsureUserRights(UserRights userRights = UserRights.BUILTIN_ADMIN)
         {
@@ -227,7 +232,7 @@ namespace Infrastructure.Helpers
                     }
                     catch (Exception ex)
                     {
-                        Log(ex);
+                        Error(ex);
                     }
 
                     if (uacAutoClosed)
@@ -367,7 +372,7 @@ namespace Infrastructure.Helpers
 
                 EnsureUserRights(userRights);
 
-                InfoAndLog(ApplicationDeployment.IsNetworkDeployed ? $"{ProductDescription.Product} {ProductDescription.Version}" : ProductDescription.AppName);
+                Info(ApplicationDeployment.IsNetworkDeployed ? $"{ProductDescription.Product} {ProductDescription.Version}" : ProductDescription.AppName);
 
                 InitConfigurations(configKeyAndFieldNames);
 
@@ -377,11 +382,11 @@ namespace Infrastructure.Helpers
                 updateWorker.Start();
                 updateWorker.WaitForExit();
                 exitForUpdating = true;
-                InfoAndLog("找到更新,准备重启...\n");
+                Info("找到更新,准备重启...\n");
             }
             catch (Exception ex)
             {
-                InfoAndLog(ex);
+                Error(ex);
                 Thread.Sleep(5000);
             }
             finally
@@ -456,7 +461,7 @@ namespace Infrastructure.Helpers
                         configField?.FieldType);
                 configField?.SetValue(null, configValue);
 
-                InfoAndLog($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
+                Console.WriteLine($"参数:{configKeyAndFieldName.Key} 值:{configValue}");
             });
         }
 
