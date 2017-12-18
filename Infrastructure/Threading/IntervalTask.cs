@@ -18,7 +18,7 @@ namespace Infrastructure.Threading
             // We don't use Observable.Interval:
             // If we block, the values start bunching up behind each other.
             return Task.Factory.StartNew(
-                () =>
+( Action )(() =>
                 {
                     var continuousIdleLoopCount = 0;
 
@@ -31,7 +31,7 @@ namespace Infrastructure.Threading
                         }
                         catch (Exception ex)
                         {
-                            Helper.Log(ex);
+                            Helper.Error(( Exception )ex);
                         }
 
                         //等待一个周期,接收终止命令
@@ -63,7 +63,7 @@ namespace Infrastructure.Threading
 
                         #endregion 结算空转计数
                     }
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                }), token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
     }
 

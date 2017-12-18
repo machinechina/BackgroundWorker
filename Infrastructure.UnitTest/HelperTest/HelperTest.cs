@@ -137,6 +137,18 @@ namespace Infrastructure.UnitTest
         #region Web Test
 
         [TestMethod]
+        public void HttpPostTest()
+        {
+            //Helper.Post("http://ctest.yilesi.cn/ppt/convert/callback", new
+            //{
+            //    inputFilePath ="c:\\a.ppt",
+            //    outputFilePath ="c:\\a",
+            //    success = 1,
+            //    errorInfo = ""
+            //}.ToJson());
+        }
+
+        [TestMethod]
         public void HttpGetTest()
         {
 

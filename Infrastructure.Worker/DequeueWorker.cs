@@ -15,14 +15,22 @@ namespace Infrastructure.QueueWorker
     /// </summary>
     public class DequeueWorker : Worker
     {
-        private Action<string> _action;
+        private Action<string> _dequeueAction;
         private string _queueRootFolder { get; }
         private string _queueName { get; }
 
-        public DequeueWorker(string queueRootFolder, string queueName, Action<string> action, int waitInterval, int stopAfterContinuousIdleLoopCount = 0)
-            : base(waitInterval, stopAfterContinuousIdleLoopCount)
+        /// <summary>
+        /// 循环取出队列中的数据,并执行指定的操作
+        /// </summary>
+        /// <param name="queueRootFolder"></param>
+        /// <param name="queueName"></param>
+        /// <param name="dequeueAction"></param>
+        /// <param name="loopInterval"></param>
+        /// <param name="stopAfterContinuousIdleLoopCount">触发设置唤醒机制,否则不建议设置</param>
+        public DequeueWorker(string queueRootFolder, string queueName, Action<string> dequeueAction, int loopInterval, int stopAfterContinuousIdleLoopCount = 0)
+            : base(loopInterval, stopAfterContinuousIdleLoopCount)
         {
-            _action = action;
+            _dequeueAction = dequeueAction;
             _queueRootFolder = queueRootFolder;
             _queueName = queueName;
         }
@@ -53,12 +61,12 @@ namespace Infrastructure.QueueWorker
                 try
                 {
                     Helper.Log($"Start Processing Dequeue Data : {dataString}");
-                    _action(dataString);
+                    _dequeueAction(dataString);
                 }
                 catch (Exception ex)
                 {
                     var msg = $"Error Processing Dequeue Data : {dataString}";
-                    Helper.InfoAndLog(ex, msg);
+                    Helper.Error(ex, msg);
                 }
                 finally
                 {
