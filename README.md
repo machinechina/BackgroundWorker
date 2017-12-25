@@ -31,6 +31,11 @@ Windows后台工作服务框架
                     worker.Start();
                 }
 ```
+
+## 队列设计
+
+<img src="队列设计.png">
+
 ## InstallGuideGen
  <li>
                 该页面根据应用的<strong>config文件</strong>自动生成,默认值为<strong>config文件</strong>中的值,标题和下拉选项来自该config上方注释,如:
